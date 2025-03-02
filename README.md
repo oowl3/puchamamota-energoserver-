@@ -17,16 +17,23 @@ bun dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Documentacion
-
+```bash
 npm install next-auth
+# or
 npm install prisma @prisma/client
+# or
 npx prisma generate
+# or
 npm install @next-auth/prisma-adapter
+# or
 npx prisma db push
-
+# or
 npm i zod
-
+```
 ## Faker en la BD
+¿Como acceder a el menu de la BD?
+```bash
 npx prisma studio
-
-https://fakerjs.dev/
+```
+Generador de datos falsos
+[https://fakerjs.dev/](https://fakerjs.dev/) 

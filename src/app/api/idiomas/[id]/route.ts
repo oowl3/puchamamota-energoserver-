@@ -23,7 +23,6 @@ export async function GET(
       );
     }
 
-    // Obtener el idioma y convertir BigInt a string
     const idioma = await prisma.listaIdioma.findUnique({
       where: { id },
     });
@@ -35,7 +34,6 @@ export async function GET(
       );
     }
 
-    // Convertir el BigInt a string para evitar errores de serialización
     const idiomaConvertido = {
       ...idioma,
       id: idioma.id.toString(),
@@ -72,7 +70,6 @@ export async function PUT(
       data: body,
     });
 
-    // Convertir BigInt a string
     const idiomaConvertido = {
       ...idiomaActualizado,
       id: idiomaActualizado.id.toString(),

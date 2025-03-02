@@ -16,16 +16,16 @@ export async function POST(request: Request) {
       data: validatedData
     });
 
-    // Convertir BigInt u otros campos no serializables
+
     const responseData = {
       ...nuevoIdioma,
-      id: nuevoIdioma.id.toString() // Ajusta según tu modelo
+      id: nuevoIdioma.id.toString()
     };
 
     return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
     console.error("Error en POST:", error);
-    // ... manejo de errores
+
   }
 }
 
@@ -34,15 +34,14 @@ export async function GET() {
   try {
     const idiomas = await prisma.listaIdioma.findMany();
 
-    // Convertir todos los registros
     const idiomasConvertidos = idiomas.map((idioma) => ({
       ...idioma,
-      id: idioma.id.toString() // Ajusta según tu modelo
+      id: idioma.id.toString() 
     }));
 
     return NextResponse.json(idiomasConvertidos);
   } catch (error) {
     console.error("Error en GET:", error);
-    // ... manejo de errores
+
   }
 }
