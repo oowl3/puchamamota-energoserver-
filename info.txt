@@ -1,2 +1,9 @@
 Pruevas para el api:
-http://localhost:3000/api/idiomas
+Idiomas
+    http://localhost:3000/api/idiomas
+    o el ID.
+    http://localhost:3000/api/idiomas/1
+
+     {
+    "idioma": "español"
+    }
