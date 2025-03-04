@@ -1,9 +1,25 @@
-Pruevas para el api:
-Idiomas
+Pruebas para el api:
+idiomas
     http://localhost:3000/api/idiomas
-    o el ID.
-    http://localhost:3000/api/idiomas/1
+    {
+        "idioma": "español"
+    }
 
-     {
-    "idioma": "español"
+
+
+tarifas
+    http://localhost:3000/api/tarifas/
+    { 
+        "tarifa": "A1" 
+    }
+
+
+
+plan_disponible
+    http://localhost:3000/api/plan_disponible/
+    {
+        "nombre": "Premium",
+        "duracion": 30,
+        "costo": 29990,
+        "descripcion": "Plan premium con beneficios exclusivos"
     }

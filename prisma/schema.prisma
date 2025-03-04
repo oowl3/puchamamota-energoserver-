@@ -8,11 +8,12 @@ datasource db {
 }
 
 model ConfiguracionAlerta {
-  id              BigInt                 @id @default(autoincrement())
-  nombre          String
-  tiempo          BigInt
-  consumo         BigInt
-  usuarioConfigs  UsuarioConfiguracion[] @relation("ConfiguracionAlertaRelation")
+  id                      BigInt               @id @default(autoincrement())
+  nombre                  String
+  tiempo                  BigInt
+  consumo                 BigInt
+  usuarioConfiguracionId  BigInt 
+  usuarioConfiguracion    UsuarioConfiguracion @relation("ConfiguracionAlertaRelation", fields: [usuarioConfiguracionId], references: [id])
 }
 
 model ListaIdioma {
@@ -66,7 +67,7 @@ model Usuario {
 }
 
 model UsuarioConfiguracion {
-  id                BigInt            @id @default(autoincrement())
+  id                BigInt               @id @default(autoincrement())
   foto              String?
   idiomaId          BigInt
   periodoFacturacion BigInt
@@ -77,10 +78,10 @@ model UsuarioConfiguracion {
   metodoPago        String
   planActualId      BigInt
   
-  listaIdioma       ListaIdioma       @relation("ListaIdiomaRelation", fields: [idiomaId], references: [id])
-  listaTarifa       ListaTarifa       @relation("ListaTarifaRelation", fields: [tarifaId], references: [id])
-  planDisponible    PlanDisponible    @relation("PlanDisponibleRelation", fields: [planActualId], references: [id])
-  usuarios          Usuario[]         @relation("UsuarioConfigRelation")
+  listaIdioma       ListaIdioma          @relation("ListaIdiomaRelation", fields: [idiomaId], references: [id])
+  listaTarifa       ListaTarifa          @relation("ListaTarifaRelation", fields: [tarifaId], references: [id])
+  planDisponible    PlanDisponible       @relation("PlanDisponibleRelation", fields: [planActualId], references: [id])
+  usuarios          Usuario[]            @relation("UsuarioConfigRelation")
   configuracionAlertas ConfiguracionAlerta[] @relation("ConfiguracionAlertaRelation")
 }
 
@@ -180,17 +181,8 @@ model DispositivoConsumo {
   id              BigInt           @id @default(autoincrement())
   medicion        BigInt
   tiempoConexion  BigInt
-  historialId    BigInt?
-  
-  historial       ConsumoHistorial? @relation("ConsumoHistorialRelation", fields: [historialId], references: [id])
-  dispositivos    Dispositivo[]     @relation("DispositivoConsumoRelation")
-}
 
-model ConsumoHistorial {
-  id       BigInt             @id @default(autoincrement())
-  fecha    DateTime
-  consumo  BigInt
-  consumos DispositivoConsumo[] @relation("ConsumoHistorialRelation")
+  dispositivos    Dispositivo[]     @relation("DispositivoConsumoRelation")
 }
 
 model CodigoSeguridad {
