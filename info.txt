@@ -23,3 +23,14 @@ plan_disponible
         "costo": 29990,
         "descripcion": "Plan premium con beneficios exclusivos"
     }
+
+
+
+configuracion_alerta
+    http://localhost:3000/api/configuracion_alerta/
+    {
+        "nombre": "Alerta de consumo alto",
+        "tiempo": "3600",
+        "consumo": "1500",
+        "usuarioConfiguracionId": "123"
+    }
