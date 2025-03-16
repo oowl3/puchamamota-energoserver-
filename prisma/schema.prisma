@@ -7,6 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model prueba_w {
+  id              BigInt                 @id @default(autoincrement())
+  voltaje          BigInt
+  corriente        BigInt
+  potencia         BigInt
+  energia          BigInt
+}
+
 model ConfiguracionAlerta {
   id                      BigInt               @id @default(autoincrement())
   nombre                  String
