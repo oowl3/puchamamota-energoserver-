@@ -34,3 +34,9 @@ configuracion_alerta
         "consumo": "1500",
         "usuarioConfiguracionId": "123"
     }
+
+consejo 
+    http://localhost:3000/api/consejo/
+    {
+        "informacion": "Instala paneles solares para energía renovable",
+    }
