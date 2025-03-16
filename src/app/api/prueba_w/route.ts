@@ -2,12 +2,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { Decimal } from "@prisma/client/runtime/library";
 
 const pruebaSchema = z.object({
-  voltaje: z.string().regex(/^\d+$/, "Debe ser un número entero válido"),
-  corriente: z.string().regex(/^\d+$/, "Debe ser un número entero válido"),
-  potencia: z.string().regex(/^\d+$/, "Debe ser un número entero válido"),
-  energia: z.string().regex(/^\d+$/, "Debe ser un número entero válido"),
+  voltaje: z.union([z.number(), z.string()]).refine(value => {
+    const num = Number(value);
+    return !isNaN(num) && num >= 0;
+  }, "Debe ser un número decimal válido"),
+  corriente: z.union([z.number(), z.string()]).refine(value => {
+    const num = Number(value);
+    return !isNaN(num) && num >= 0;
+  }, "Debe ser un número decimal válido"),
+  potencia: z.union([z.number(), z.string()]).refine(value => {
+    const num = Number(value);
+    return !isNaN(num) && num >= 0;
+  }, "Debe ser un número decimal válido"),
+  energia: z.union([z.number(), z.string()]).refine(value => {
+    const num = Number(value);
+    return !isNaN(num) && num >= 0;
+  }, "Debe ser un número decimal válido"),
 });
 
 // GET todos los registros
@@ -43,10 +56,10 @@ export async function POST(request: Request) {
     
     const nuevoRegistro = await prisma.prueba_w.create({
       data: {
-        voltaje: BigInt(validatedData.voltaje),
-        corriente: BigInt(validatedData.corriente),
-        potencia: BigInt(validatedData.potencia),
-        energia: BigInt(validatedData.energia),
+        voltaje: new Decimal(validatedData.voltaje.toString()),
+        corriente: new Decimal(validatedData.corriente.toString()),
+        potencia: new Decimal(validatedData.potencia.toString()),
+        energia: new Decimal(validatedData.energia.toString()),
       }
     });
 

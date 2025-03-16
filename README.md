@@ -24,9 +24,10 @@ npm install prisma @prisma/client
 # or
 npx prisma generate
 # or
-npm install @next-auth/prisma-adapter
-# or
 npx prisma db push
+# or
+npm install @next-auth/prisma-adapter
+npm install decimal.js
 # or
 npm i zod
 ```
