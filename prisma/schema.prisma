@@ -75,16 +75,16 @@ model Usuario {
 }
 
 model UsuarioConfiguracion {
-  id                BigInt               @id @default(autoincrement())
-  foto              String?
-  idiomaId          BigInt
-  periodoFacturacion BigInt
-  consumoInicial    BigInt
-  consumoAnterior   BigInt
-  consumoActual     BigInt
-  tarifaId          BigInt
-  metodoPago        String
-  planActualId      BigInt
+  id                    BigInt               @id @default(autoincrement())
+  foto                  String?
+  idiomaId              BigInt
+  periodoFacturacion    BigInt
+  consumoInicial        BigInt
+  consumoAnterior       BigInt
+  consumoActual         BigInt
+  tarifaId              BigInt
+  metodoPago            String
+  planActualId          BigInt
   
   listaIdioma       ListaIdioma          @relation("ListaIdiomaRelation", fields: [idiomaId], references: [id])
   listaTarifa       ListaTarifa          @relation("ListaTarifaRelation", fields: [tarifaId], references: [id])

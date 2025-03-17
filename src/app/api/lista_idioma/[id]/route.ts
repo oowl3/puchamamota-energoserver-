@@ -11,11 +11,12 @@ const corsHeaders = {
 // GET: Obtener un idioma por ID
 export async function GET(
   _: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Convertir el ID a número y validar
-    const id = Number(params.id);
+    const resolvedParams = await params;
+    const id = Number(resolvedParams.id);
+    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "ID no válido" },
@@ -53,10 +54,16 @@ export async function GET(
 // PUT: Actualizar un idioma por ID
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id);
+    const [resolvedParams, body] = await Promise.all([
+      params,
+      request.json()
+    ]);
+    
+    const id = Number(resolvedParams.id);
+    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "ID no válido" },
@@ -64,7 +71,6 @@ export async function PUT(
       );
     }
 
-    const body = await request.json();
     const idiomaActualizado = await prisma.listaIdioma.update({
       where: { id },
       data: body,
@@ -89,10 +95,12 @@ export async function PUT(
 // DELETE: Eliminar un idioma por ID
 export async function DELETE(
   _: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id);
+    const resolvedParams = await params;
+    const id = Number(resolvedParams.id);
+    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "ID no válido" },
