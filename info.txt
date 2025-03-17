@@ -1,14 +1,14 @@
 Pruebas para el api:
-idiomas
-    http://localhost:3000/api/idiomas
+lista_idioma
+    http://localhost:3000/api/lista_idioma
     {
         "idioma": "español"
     }
 
 
 
-tarifas
-    http://localhost:3000/api/tarifas/
+lista_tarifa
+    http://localhost:3000/api/lista_tarifa/
     { 
         "tarifa": "A1" 
     }
