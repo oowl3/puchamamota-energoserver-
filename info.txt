@@ -47,6 +47,15 @@ lista_ubicacion
         "ubicacion": "Sala de estar"
     }
 
+dispositivo_alerta
+    http://localhost:3000/api/dispositivo_alerta/
+    {
+        "nombreAlerta": "Alerta consumo alto",
+        "consumoLimite": 1500,
+        "tiempo": 30,
+        "acciones": "Enviar notificación y apagar dispositivo"
+    }
+
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 prueba_w
     http://localhost:3000/api/prueba_w
