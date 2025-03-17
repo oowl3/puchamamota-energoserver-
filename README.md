@@ -20,15 +20,13 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ```bash
 npm install next-auth
 # or
-npm install prisma @prisma/client
-# or
 npx prisma generate
 # or
 npx prisma db push
 # or
+npm install prisma @prisma/client
 npm install @next-auth/prisma-adapter
 npm install decimal.js
-# or
 npm i zod
 ```
 ## Faker en la BD
