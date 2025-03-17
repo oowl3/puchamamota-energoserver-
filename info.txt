@@ -41,6 +41,11 @@ consejo
         "informacion": "Instala paneles solares para energía renovable"
     }
 
+lista_ubicacion
+    http://localhost:3000/api/lista_ubicacion/
+    {
+        "ubicacion": "Sala de estar"
+    }
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 prueba_w
