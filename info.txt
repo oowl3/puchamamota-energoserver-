@@ -38,5 +38,16 @@ configuracion_alerta
 consejo 
     http://localhost:3000/api/consejo/
     {
-        "informacion": "Instala paneles solares para energía renovable",
+        "informacion": "Instala paneles solares para energía renovable"
+    }
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+prueba_w
+    http://localhost:3000/api/prueba_w
+    {
+        "voltaje": 120.5,
+        "corriente": 3.14,
+        "potencia": 378.2,
+        "energia": 1500.75
     }
