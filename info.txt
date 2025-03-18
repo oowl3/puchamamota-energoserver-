@@ -1,4 +1,12 @@
 Pruebas para el api:
+usuario_token
+http://localhost:3000/api/usuario_token/
+    {
+        "token":"mi_token_secreto_234"
+    }    
+
+    
+---------------------------------------------------
 lista_idioma
     http://localhost:3000/api/lista_idioma
     {
@@ -11,6 +19,22 @@ lista_tarifa
     http://localhost:3000/api/lista_tarifa/
     { 
         "tarifa": "A1" 
+    }
+
+
+
+usuario_configuracion
+http://localhost:3000/api/usuario_configuracion/
+    {
+        "foto": "url_imagen_opcional",
+        "idiomaId": "1",
+        "periodoFacturacion": "30",
+        "consumoInicial": "1000",
+        "consumoAnterior": "950",
+        "consumoActual": "1200",
+        "tarifaId": "1",
+        "metodoPago": "Tarjeta Crédito",
+        "planActualId": "1"
     }
 
 
@@ -35,17 +59,23 @@ configuracion_alerta
         "usuarioConfiguracionId": "123"
     }
 
+
+---------------------------------------------------
 consejo 
     http://localhost:3000/api/consejo/
     {
         "informacion": "Instala paneles solares para energía renovable"
     }
 
+
+---------------------------------------------------
 lista_ubicacion
     http://localhost:3000/api/lista_ubicacion/
     {
         "ubicacion": "Sala de estar"
     }
+
+
 
 dispositivo_alerta
     http://localhost:3000/api/dispositivo_alerta/
@@ -57,20 +87,6 @@ dispositivo_alerta
     }
 
 
-
-usuario_configuracion
-http://localhost:3000/api/usuario_configuracion/
-    {
-        "foto": "url_imagen_opcional",
-        "idiomaId": "1",
-        "periodoFacturacion": "30",
-        "consumoInicial": "1000",
-        "consumoAnterior": "950",
-        "consumoActual": "1200",
-        "tarifaId": "1",
-        "metodoPago": "Tarjeta Crédito",
-        "planActualId": "1"
-    }
 
 dispositivo_consumo
 http://localhost:3000/api/dispositivo_consumo/
