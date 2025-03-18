@@ -56,6 +56,28 @@ dispositivo_alerta
         "acciones": "Enviar notificación y apagar dispositivo"
     }
 
+
+
+usuario_configuracion
+http://localhost:3000/api/usuario_configuracion/
+    {
+        "foto": "url_imagen_opcional",
+        "idiomaId": "1",
+        "periodoFacturacion": "30",
+        "consumoInicial": "1000",
+        "consumoAnterior": "950",
+        "consumoActual": "1200",
+        "tarifaId": "1",
+        "metodoPago": "Tarjeta Crédito",
+        "planActualId": "1"
+    }
+
+dispositivo_consumo
+http://localhost:3000/api/dispositivo_consumo/
+    {
+        "medicion": "12345",
+        "tiempoConexion": "54321"
+    }
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 prueba_w
     http://localhost:3000/api/prueba_w
