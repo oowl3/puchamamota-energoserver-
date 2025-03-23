@@ -1,30 +1,36 @@
 Pruebas para el api:
 usuario_token
-http://localhost:3000/api/usuario_token/
-    {
-        "token":"mi_token_secreto_234"
-    }    
+    http://localhost:3000/api/usuario_token/
+        {
+            "token":"mi_token_secreto_234"
+        }    
 
-    
+
+
+rol_permiso
+    http://localhost:3000/api/rol_permiso/
+        {
+            "permiso": "read"
+        }
 ---------------------------------------------------
 lista_idioma
     http://localhost:3000/api/lista_idioma
-    {
-        "idioma": "español"
-    }
+        {
+            "idioma": "español"
+        }
 
 
 
 lista_tarifa
     http://localhost:3000/api/lista_tarifa/
-    { 
-        "tarifa": "A1" 
-    }
+        { 
+            "tarifa": "A1" 
+        }
 
 
 
 usuario_configuracion
-http://localhost:3000/api/usuario_configuracion/
+    http://localhost:3000/api/usuario_configuracion/
     {
         "foto": "url_imagen_opcional",
         "idiomaId": "1",
@@ -41,65 +47,66 @@ http://localhost:3000/api/usuario_configuracion/
 
 plan_disponible
     http://localhost:3000/api/plan_disponible/
-    {
-        "nombre": "Premium",
-        "duracion": 30,
-        "costo": 29990,
-        "descripcion": "Plan premium con beneficios exclusivos"
-    }
+        {
+            "nombre": "Premium",
+            "duracion": 30,
+            "costo": 29990,
+            "descripcion": "Plan premium con beneficios exclusivos"
+        }
 
 
 
 configuracion_alerta
     http://localhost:3000/api/configuracion_alerta/
-    {
-        "nombre": "Alerta de consumo alto",
-        "tiempo": "3600",
-        "consumo": "1500",
-        "usuarioConfiguracionId": "123"
-    }
+        {
+            "nombre": "Alerta de consumo alto",
+            "tiempo": "3600",
+            "consumo": "1500",
+            "usuarioConfiguracionId": "123"
+        }
 
 
 ---------------------------------------------------
 consejo 
     http://localhost:3000/api/consejo/
-    {
-        "informacion": "Instala paneles solares para energía renovable"
-    }
+        {
+            "informacion": "Instala paneles solares para energía renovable"
+        }
 
 
 ---------------------------------------------------
 lista_ubicacion
     http://localhost:3000/api/lista_ubicacion/
-    {
-        "ubicacion": "Sala de estar"
-    }
+        {
+            "ubicacion": "Sala de estar"
+        }
 
 
 
 dispositivo_alerta
     http://localhost:3000/api/dispositivo_alerta/
-    {
-        "nombreAlerta": "Alerta consumo alto",
-        "consumoLimite": 1500,
-        "tiempo": 30,
-        "acciones": "Enviar notificación y apagar dispositivo"
-    }
+        {
+            "nombreAlerta": "Alerta consumo alto",
+            "consumoLimite": 1500,
+            "tiempo": 30,
+            "acciones": "Enviar notificación y apagar dispositivo"
+        }
 
 
 
 dispositivo_consumo
-http://localhost:3000/api/dispositivo_consumo/
-    {
-        "medicion": "12345",
-        "tiempoConexion": "54321"
-    }
+    http://localhost:3000/api/dispositivo_consumo/
+        {
+            "medicion": "12345",
+            "tiempoConexion": "54321"
+        }
+        
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 prueba_w
     http://localhost:3000/api/prueba_w
-    {
-        "voltaje": 120.5,
-        "corriente": 3.14,
-        "potencia": 378.2,
-        "energia": 1500.75
-    }
+        {
+            "voltaje": 120.5,
+            "corriente": 3.14,
+            "potencia": 378.2,
+            "energia": 1500.75
+        }
