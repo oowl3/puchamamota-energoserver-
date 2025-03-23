@@ -12,6 +12,13 @@ rol_permiso
         {
             "permiso": "read"
         }
+
+usuario_rol
+    http://localhost:3000/api/usuario_rol/
+    {
+        "rol": "administrador",
+        "permisoIds": ["1", "2", "3"]
+    }
 ---------------------------------------------------
 lista_idioma
     http://localhost:3000/api/lista_idioma
@@ -62,7 +69,7 @@ configuracion_alerta
             "nombre": "Alerta de consumo alto",
             "tiempo": "3600",
             "consumo": "1500",
-            "usuarioConfiguracionId": "123"
+            "usuarioConfiguracionId": "1"
         }
 
 

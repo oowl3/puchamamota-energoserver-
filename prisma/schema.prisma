@@ -42,7 +42,7 @@ model PlanDisponible {
 model RolPermiso {
   id          BigInt       @id @default(autoincrement())
   permiso     String
-  usuarioRols UsuarioRol[] @relation("RolPermisoRelation")
+  usuarioRols UsuarioRol[] // Relación muchos-a-muchos
 }
 
 model Consejo {
@@ -94,12 +94,10 @@ model UsuarioConfiguracion {
 }
 
 model UsuarioRol {
-  id          BigInt      @id @default(autoincrement())
-  rol         String
-  permisoId   BigInt?
-  
-  permiso     RolPermiso? @relation("RolPermisoRelation", fields: [permisoId], references: [id])
-  usuarios    Usuario[]   @relation("UsuarioRolRelation")
+  id        BigInt      @id @default(autoincrement())
+  rol       String
+  permisos  RolPermiso[] // Relación muchos-a-muchos
+  usuarios  Usuario[]   @relation("UsuarioRolRelation")
 }
 
 model UsuarioToken {
