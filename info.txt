@@ -13,11 +13,29 @@ rol_permiso
             "permiso": "read"
         }
 
+
+
 usuario_rol
     http://localhost:3000/api/usuario_rol/
     {
         "rol": "administrador",
         "permisoIds": ["1", "2", "3"]
+    }
+
+
+
+usuario 
+    http://localhost:3000/api/usuario/
+    {
+        "nombre": "Ana",
+        "apellido": "García",
+        "edad": "25",
+        "genero": "F",
+        "telefono": "1234567890",
+        "tokenId": "1",
+        "configuracionId": "1",
+        "rolId": "1",
+        //"grupoId": "0"
     }
 ---------------------------------------------------
 lista_idioma
