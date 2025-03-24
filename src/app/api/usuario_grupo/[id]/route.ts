@@ -1,23 +1,37 @@
+// app/api/grupos/[id]/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
-const idSchema = z.string().regex(/^\d+$/).transform(v => BigInt(v));
-
-const grupoUpdateSchema = grupoSchema.partial();
+// Esquema para validación de actualización
+const updateGrupoSchema = z.object({
+  nombre: z.string().min(1, "El nombre es requerido").optional(),
+  dispositivoAsignadoId: z.string()
+    .min(1, "Se requiere ID de dispositivo")
+    .regex(/^\d+$/, "Debe ser un número entero positivo")
+    .optional(),
+  historialId: z.string()
+    .regex(/^\d+$/, "Debe ser un número entero positivo")
+    .optional()
+    .nullable()
+});
 
 // GET - Obtener grupo por ID
-export async function GET(
-  _: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = await idSchema.parseAsync(params.id);
+    const id = params.id;
+    
+    if (!/^\d+$/.test(id)) {
+      return NextResponse.json(
+        { error: "ID inválido" },
+        { status: 400 }
+      );
+    }
 
     const grupo = await prisma.usuarioGrupo.findUnique({
-      where: { id },
+      where: { id: BigInt(id) },
       include: {
-        listaLugar: true,
         dispositivo: true,
         historial: true,
         usuarios: true
@@ -31,26 +45,20 @@ export async function GET(
       );
     }
 
+    // Convertir todos los BigInt a strings
     const grupoConvertido = {
       ...grupo,
       id: grupo.id.toString(),
-      lugarId: grupo.lugarId.toString(),
       dispositivoAsignadoId: grupo.dispositivoAsignadoId.toString(),
-      historialId: grupo.historialId?.toString(),
-      listaLugar: {
-        ...grupo.listaLugar,
-        id: grupo.listaLugar.id.toString()
-      },
-      dispositivo: {
+      historialId: grupo.historialId?.toString() || null,
+      dispositivo: grupo.dispositivo ? {
         ...grupo.dispositivo,
         id: grupo.dispositivo.id.toString()
-      },
-      ...(grupo.historial && {
-        historial: {
-          ...grupo.historial,
-          id: grupo.historial.id.toString()
-        }
-      }),
+      } : null,
+      historial: grupo.historial ? {
+        ...grupo.historial,
+        id: grupo.historial.id.toString()
+      } : null,
       usuarios: grupo.usuarios.map(usuario => ({
         ...usuario,
         id: usuario.id.toString()
@@ -59,101 +67,104 @@ export async function GET(
 
     return NextResponse.json(grupoConvertido);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
-    }
-    console.error("Error en GET:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    console.error("Error en GET por ID:", error);
+    return NextResponse.json(
+      { error: "Error al obtener el grupo" },
+      { status: 500 }
+    );
   }
 }
 
 // PUT - Actualizar grupo
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const [id, body] = await Promise.all([
-      idSchema.parseAsync(params.id),
-      request.json()
-    ]);
+    const id = params.id;
     
-    const validatedData = await grupoUpdateSchema.parseAsync(body);
+    if (!/^\d+$/.test(id)) {
+      return NextResponse.json(
+        { error: "ID inválido" },
+        { status: 400 }
+      );
+    }
 
-    const grupoActualizado = await prisma.usuarioGrupo.update({
-      where: { id },
-      data: {
-        ...validatedData,
-        ...(validatedData.lugarId && { listaLugar: { connect: { id: validatedData.lugarId } } }),
-        ...(validatedData.dispositivoAsignadoId && { dispositivo: { connect: { id: validatedData.dispositivoAsignadoId } } }),
-        ...(validatedData.historialId && { historial: { connect: { id: validatedData.historialId } } })
-      },
-      include: {
-        listaLugar: true,
-        dispositivo: true,
-        historial: true
-      }
-    });
+    const body = await request.json();
+    const validatedData = updateGrupoSchema.parse(body);
 
-    const responseData = {
-      ...grupoActualizado,
-      id: grupoActualizado.id.toString(),
-      lugarId: grupoActualizado.lugarId.toString(),
-      dispositivoAsignadoId: grupoActualizado.dispositivoAsignadoId.toString(),
-      historialId: grupoActualizado.historialId?.toString(),
-      listaLugar: {
-        ...grupoActualizado.listaLugar,
-        id: grupoActualizado.listaLugar.id.toString()
-      },
-      dispositivo: {
-        ...grupoActualizado.dispositivo,
-        id: grupoActualizado.dispositivo.id.toString()
-      },
-      ...(grupoActualizado.historial && {
-        historial: {
-          ...grupoActualizado.historial,
-          id: grupoActualizado.historial.id.toString()
-        }
+    const updateData: any = {
+      ...validatedData,
+      ...(validatedData.dispositivoAsignadoId && {
+        dispositivoAsignadoId: BigInt(validatedData.dispositivoAsignadoId)
+      }),
+      ...(validatedData.historialId !== undefined && {
+        historialId: validatedData.historialId 
+          ? BigInt(validatedData.historialId) 
+          : null
       })
     };
 
-    return NextResponse.json(responseData);
+    const grupoActualizado = await prisma.usuarioGrupo.update({
+      where: { id: BigInt(id) },
+      data: updateData
+    });
+
+    return NextResponse.json({
+      ...grupoActualizado,
+      id: grupoActualizado.id.toString(),
+      dispositivoAsignadoId: grupoActualizado.dispositivoAsignadoId.toString(),
+      historialId: grupoActualizado.historialId?.toString() || null
+    });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
-    }
-    if (error instanceof Error && error.message.includes("registro solicitado")) {
-      return NextResponse.json({ error: "Grupo no encontrado" }, { status: 404 });
-    }
     console.error("Error en PUT:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors.map(e => e.message) },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Error al actualizar el grupo" },
+      { status: 500 }
+    );
   }
 }
 
 // DELETE - Eliminar grupo
-export async function DELETE(
-  _: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = await idSchema.parseAsync(params.id);
+    const id = params.id;
+    
+    if (!/^\d+$/.test(id)) {
+      return NextResponse.json(
+        { error: "ID inválido" },
+        { status: 400 }
+      );
+    }
 
-    await prisma.usuarioGrupo.delete({
-      where: { id }
+    const grupoEliminado = await prisma.usuarioGrupo.delete({
+      where: { id: BigInt(id) }
     });
 
-    return NextResponse.json(
-      { mensaje: "Grupo eliminado correctamente" },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      ...grupoEliminado,
+      id: grupoEliminado.id.toString(),
+      dispositivoAsignadoId: grupoEliminado.dispositivoAsignadoId.toString(),
+      historialId: grupoEliminado.historialId?.toString() || null
+    });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
-    }
-    if (error instanceof Error && error.message.includes("registro solicitado")) {
-      return NextResponse.json({ error: "Grupo no encontrado" }, { status: 404 });
-    }
     console.error("Error en DELETE:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    
+    if ((error as any).code === "P2025") {
+      return NextResponse.json(
+        { error: "Grupo no encontrado" },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Error al eliminar el grupo" },
+      { status: 500 }
+    );
   }
 }

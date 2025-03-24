@@ -107,25 +107,7 @@ lista_ubicacion
         }
 
 
-
-dispositivo_alerta
-    http://localhost:3000/api/dispositivo_alerta/
-        {
-            "nombreAlerta": "Alerta consumo alto",
-            "consumoLimite": 1500,
-            "tiempo": 30,
-            "acciones": "Enviar notificación y apagar dispositivo"
-        }
-
-
-
-dispositivo_consumo
-    http://localhost:3000/api/dispositivo_consumo/
-        {
-            "medicion": "12345",
-            "tiempoConexion": "54321"
-        }
-        
+    
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 prueba_w
     http://localhost:3000/api/prueba_w
