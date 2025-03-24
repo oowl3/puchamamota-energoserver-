@@ -64,15 +64,14 @@ model Usuario {
   edad            BigInt
   genero          String
   telefono        BigInt?
-  tokenId        BigInt?
+  tokenId         BigInt?
   configuracionId BigInt?
-  rolId          BigInt?
-  grupoId        BigInt?
+  rolId           BigInt?
   
   token           UsuarioToken?        @relation("UsuarioTokenRelation", fields: [tokenId], references: [id])
   configuracion   UsuarioConfiguracion? @relation("UsuarioConfigRelation", fields: [configuracionId], references: [id])
   rol             UsuarioRol?          @relation("UsuarioRolRelation", fields: [rolId], references: [id])
-  grupo           UsuarioGrupo?        @relation("UsuarioGrupoRelation", fields: [grupoId], references: [id])
+  grupos          UsuarioGrupo[]       @relation("UsuarioGrupoRelation") // Cambiado a array
 }
 
 model UsuarioConfiguracion {
@@ -108,14 +107,14 @@ model UsuarioToken {
 }
 
 model UsuarioGrupo {
-  id                   BigInt           @id @default(autoincrement())
-  nombre               String
-  dispositivoAsignadoId BigInt
-  historialId         BigInt?
+  id             BigInt           @id @default(autoincrement())
+  nombre         String
+  historialId    BigInt?
+  usuarioId      BigInt // Nuevo campo
   
-  historial            GrupoHistorial?  @relation("GrupoHistorialRelation", fields: [historialId], references: [id])
-  dispositivo          Dispositivo      @relation("DispositivoGrupoRelation", fields: [dispositivoAsignadoId], references: [id])
-  usuarios             Usuario[]        @relation("UsuarioGrupoRelation")
+  historial      GrupoHistorial?  @relation("GrupoHistorialRelation", fields: [historialId], references: [id])
+  usuario        Usuario          @relation("UsuarioGrupoRelation", fields: [usuarioId], references: [id]) // Relación corregida
+  dispositivos   Dispositivo[]    @relation("GrupoDispositivoRelation") // Nueva relación
 }
 
 model GrupoHistorial {
@@ -127,15 +126,16 @@ model GrupoHistorial {
 }
 
 model Dispositivo {
-  id                    BigInt               @id @default(autoincrement())
-  codigoEspUsuario      BigInt
-  nombreDispositivo     String
-  nombreAparato         String
-  consumoAparatoSug     BigInt
-  ubicacionId           BigInt
-
-  listaUbicacion        ListaUbicacion       @relation("ListaUbicacionRelation", fields: [ubicacionId], references: [id])
-  grupos                UsuarioGrupo[]       @relation("DispositivoGrupoRelation")
+  id                  BigInt           @id @default(autoincrement())
+  codigoEspUsuario    BigInt
+  nombreDispositivo   String
+  nombreAparato       String
+  consumoAparatoSug   BigInt
+  ubicacionId         BigInt
+  grupoId             BigInt? 
+  
+  listaUbicacion      ListaUbicacion   @relation("ListaUbicacionRelation", fields: [ubicacionId], references: [id])
+  grupo               UsuarioGrupo?    @relation("GrupoDispositivoRelation", fields: [grupoId], references: [id]) // Relación corregida
 }
 
 model ListaUbicacion {

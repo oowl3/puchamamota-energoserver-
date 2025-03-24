@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación
+// Esquema de validación actualizado (eliminado grupoId)
 const usuarioSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido"),
   apellido: z.string().min(1, "El apellido es requerido"),
@@ -12,20 +12,22 @@ const usuarioSchema = z.object({
   tokenId: z.string().regex(/^\d+$/).optional().transform((v) => v ? BigInt(v) : undefined),
   configuracionId: z.string().regex(/^\d+$/).optional().transform((v) => v ? BigInt(v) : undefined),
   rolId: z.string().regex(/^\d+$/).optional().transform((v) => v ? BigInt(v) : undefined),
-  grupoId: z.string().regex(/^\d+$/).optional().transform((v) => v ? BigInt(v) : undefined),
 });
 
-// POST - Crear usuario
+// POST - Crear usuario (actualizado)
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validatedData = usuarioSchema.parse(body);
 
     const nuevoUsuario = await prisma.usuario.create({
-      data: validatedData
+      data: {
+        ...validatedData,
+        // Eliminado grupoId de los datos
+      }
     });
 
-    // Convertir BigInts a strings para la respuesta
+    // Conversión a string
     const responseData = {
       ...nuevoUsuario,
       id: nuevoUsuario.id.toString(),
@@ -34,7 +36,6 @@ export async function POST(request: Request) {
       tokenId: nuevoUsuario.tokenId?.toString(),
       configuracionId: nuevoUsuario.configuracionId?.toString(),
       rolId: nuevoUsuario.rolId?.toString(),
-      grupoId: nuevoUsuario.grupoId?.toString()
     };
 
     return NextResponse.json(responseData, { status: 201 });
@@ -47,13 +48,21 @@ export async function POST(request: Request) {
   }
 }
 
-// GET - Obtener todos los usuarios
+// GET - Obtener todos los usuarios con grupos (actualizado)
 export async function GET() {
   try {
-    const usuarios = await prisma.usuario.findMany();
+    const usuarios = await prisma.usuario.findMany({
+      include: {
+        grupos: {
+          include: {
+            dispositivos: true
+          }
+        }
+      }
+    });
 
-    // Convertir BigInts a strings
-    const usuariosConvertidos = usuarios.map((usuario) => ({
+    // Conversión de datos
+    const usuariosConvertidos = usuarios.map(usuario => ({
       ...usuario,
       id: usuario.id.toString(),
       edad: usuario.edad.toString(),
@@ -61,7 +70,17 @@ export async function GET() {
       tokenId: usuario.tokenId?.toString(),
       configuracionId: usuario.configuracionId?.toString(),
       rolId: usuario.rolId?.toString(),
-      grupoId: usuario.grupoId?.toString()
+      grupos: usuario.grupos.map(grupo => ({
+        ...grupo,
+        id: grupo.id.toString(),
+        historialId: grupo.historialId?.toString(),
+        dispositivos: grupo.dispositivos.map(dispositivo => ({
+          ...dispositivo,
+          id: dispositivo.id.toString(),
+          ubicacionId: dispositivo.ubicacionId.toString(),
+          grupoId: dispositivo.grupoId?.toString()
+        }))
+      }))
     }));
 
     return NextResponse.json(usuariosConvertidos);
