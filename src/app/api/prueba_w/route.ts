@@ -1,85 +1,70 @@
-// src/app/api/pruebaw/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { Decimal } from "@prisma/client/runtime/library";
 
-const pruebaSchema = z.object({
-  voltaje: z.union([z.number(), z.string()]).refine(value => {
-    const num = Number(value);
-    return !isNaN(num) && num >= 0;
-  }, "Debe ser un número decimal válido"),
-  corriente: z.union([z.number(), z.string()]).refine(value => {
-    const num = Number(value);
-    return !isNaN(num) && num >= 0;
-  }, "Debe ser un número decimal válido"),
-  potencia: z.union([z.number(), z.string()]).refine(value => {
-    const num = Number(value);
-    return !isNaN(num) && num >= 0;
-  }, "Debe ser un número decimal válido"),
-  energia: z.union([z.number(), z.string()]).refine(value => {
-    const num = Number(value);
-    return !isNaN(num) && num >= 0;
-  }, "Debe ser un número decimal válido"),
+// Esquema de validación
+const pruebaWSchema = z.object({
+  codigoesp: z.string().transform(val => BigInt(val)),
+  voltaje: z.string().refine(val => !isNaN(parseFloat(val)), {
+    message: "voltaje must be a valid decimal number",
+  }),
+  corriente: z.string().refine(val => !isNaN(parseFloat(val)), {
+    message: "corriente must be a valid decimal number",
+  }),
+  potencia: z.string().refine(val => !isNaN(parseFloat(val)), {
+    message: "potencia must be a valid decimal number",
+  }),
+  energia: z.string().refine(val => !isNaN(parseFloat(val)), {
+    message: "energia must be a valid decimal number",
+  }),
 });
 
-// GET todos los registros
-export async function GET() {
-  try {
-    const registros = await prisma.prueba_w.findMany();
-    
-    return NextResponse.json(
-      registros.map(registro => ({
-        ...registro,
-        id: registro.id.toString(),
-        voltaje: registro.voltaje.toString(),
-        corriente: registro.corriente.toString(),
-        potencia: registro.potencia.toString(),
-        energia: registro.energia.toString(),
-      }))
-    );
-
-  } catch (error) {
-    console.error("Error GET prueba_w:", error);
-    return NextResponse.json(
-      { error: "Error al obtener registros de prueba_w" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST nuevo registro
+// POST
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const validatedData = pruebaSchema.parse(body);
-    
-    const nuevoRegistro = await prisma.prueba_w.create({
+    const validatedData = pruebaWSchema.parse(body);
+
+    const nuevaPruebaW = await prisma.prueba_w.create({
       data: {
-        voltaje: new Decimal(validatedData.voltaje.toString()),
-        corriente: new Decimal(validatedData.corriente.toString()),
-        potencia: new Decimal(validatedData.potencia.toString()),
-        energia: new Decimal(validatedData.energia.toString()),
+        codigoesp: validatedData.codigoesp,
+        voltaje: validatedData.voltaje,
+        corriente: validatedData.corriente,
+        potencia: validatedData.potencia,
+        energia: validatedData.energia,
       }
     });
 
-    return NextResponse.json(
-      {
-        ...nuevoRegistro,
-        id: nuevoRegistro.id.toString(),
-        voltaje: nuevoRegistro.voltaje.toString(),
-        corriente: nuevoRegistro.corriente.toString(),
-        potencia: nuevoRegistro.potencia.toString(),
-        energia: nuevoRegistro.energia.toString(),
-      },
-      { status: 201 }
-    );
+    const responseData = {
+      ...nuevaPruebaW,
+      id: nuevaPruebaW.id.toString(),
+      codigoesp: nuevaPruebaW.codigoesp.toString()
+    };
 
+    return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
-    console.error("Error POST prueba_w:", error);
-    
-    return error instanceof z.ZodError 
-      ? NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-      : NextResponse.json({ error: "Error al crear registro" }, { status: 500 });
+    console.error("Error en POST:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// GET
+export async function GET() {
+  try {
+    const pruebas = await prisma.prueba_w.findMany();
+
+    const pruebasConvertidas = pruebas.map((prueba) => ({
+      ...prueba,
+      id: prueba.id.toString(),
+      codigoesp: prueba.codigoesp.toString()
+    }));
+
+    return NextResponse.json(pruebasConvertidas);
+  } catch (error) {
+    console.error("Error en GET:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
