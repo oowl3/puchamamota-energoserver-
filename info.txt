@@ -117,3 +117,5 @@ prueba_w
             "potencia": 378.2,
             "energia": 1500.75
         }
+
+        
