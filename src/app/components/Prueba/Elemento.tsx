@@ -1,6 +1,8 @@
+"use client";
+
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
-import styles from './Button.module.css';
+import styles from './Elemento.module.css';
 
 const ElementoEj: React.FC = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
