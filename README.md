@@ -18,6 +18,9 @@ npm install @next-auth/prisma-adapter
 npm install decimal.js
 npm i zod
 
+npm install gsap
+
+
 # Para prisma
 npx prisma generate
 npx prisma db push
