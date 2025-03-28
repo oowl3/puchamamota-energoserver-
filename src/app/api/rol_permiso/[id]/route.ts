@@ -104,7 +104,12 @@ export async function DELETE(
   } catch (error) {
     console.error("Error en DELETE:", error);
     
-    if ((error as any).code === 'P2025') {
+    // Manejo seguro de errores de Prisma
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as { code: string }).code === "P2025"
+    ) {
       return NextResponse.json(
         { error: "Permiso no encontrado" },
         { status: 404 }
