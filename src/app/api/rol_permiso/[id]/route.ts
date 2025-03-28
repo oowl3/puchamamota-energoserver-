@@ -1,6 +1,6 @@
 // app/api/rol-permisos/[id]/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { z } from "zod";
 
 // Esquema para actualización

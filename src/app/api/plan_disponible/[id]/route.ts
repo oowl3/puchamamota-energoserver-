@@ -1,6 +1,6 @@
 // src/app/api/planes-disponibles/[id]/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import type { PlanDisponible } from "@prisma/client";
 
 const corsHeaders = {

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import ElementoEj from "./components/Prueba/Elemento";
 export default function Home() {
   return (

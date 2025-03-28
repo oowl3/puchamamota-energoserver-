@@ -1,40 +1,31 @@
-// app/api/grupos/[id]/route.ts
-
+// src/app/api/usuario_grupo/[id]/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema para validación de actualización
+// Esquema para actualización
 const updateGrupoSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").optional(),
-  dispositivoAsignadoId: z.string()
-    .min(1, "Se requiere ID de dispositivo")
-    .regex(/^\d+$/, "Debe ser un número entero positivo")
+  usuarioId: z.coerce.string()
+    .regex(/^\d+$/, "ID de usuario inválido")
     .optional(),
-  historialId: z.string()
-    .regex(/^\d+$/, "Debe ser un número entero positivo")
+  historialId: z.coerce.string()
+    .regex(/^\d+$/, "ID de historial inválido")
     .optional()
     .nullable()
+    .transform(val => val === "" ? null : val),
+  dispositivosIds: z.array(z.string().regex(/^\d+$/)).optional()
 });
 
 // GET - Obtener grupo por ID
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = params.id;
-    
-    if (!/^\d+$/.test(id)) {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
-
     const grupo = await prisma.usuarioGrupo.findUnique({
-      where: { id: BigInt(id) },
+      where: { id: BigInt(params.id) },
       include: {
-        dispositivo: true,
+        usuario: true,
         historial: true,
-        usuarios: true
+        dispositivos: true
       }
     });
 
@@ -45,29 +36,24 @@ export async function GET(request: Request, { params }: { params: { id: string }
       );
     }
 
-    // Convertir todos los BigInt a strings
+    // Conversión segura de tipos BigInt
+    const convertEntity = (entity: any) => ({
+      ...entity,
+      id: entity.id.toString(),
+      ...(entity.historialId && { historialId: entity.historialId.toString() }),
+      usuarioId: entity.usuarioId.toString()
+    });
+
     const grupoConvertido = {
-      ...grupo,
-      id: grupo.id.toString(),
-      dispositivoAsignadoId: grupo.dispositivoAsignadoId.toString(),
-      historialId: grupo.historialId?.toString() || null,
-      dispositivo: grupo.dispositivo ? {
-        ...grupo.dispositivo,
-        id: grupo.dispositivo.id.toString()
-      } : null,
-      historial: grupo.historial ? {
-        ...grupo.historial,
-        id: grupo.historial.id.toString()
-      } : null,
-      usuarios: grupo.usuarios.map(usuario => ({
-        ...usuario,
-        id: usuario.id.toString()
-      }))
+      ...convertEntity(grupo),
+      usuario: grupo.usuario ? convertEntity(grupo.usuario) : null,
+      historial: grupo.historial ? convertEntity(grupo.historial) : null,
+      dispositivos: grupo.dispositivos.map(d => convertEntity(d))
     };
 
     return NextResponse.json(grupoConvertido);
   } catch (error) {
-    console.error("Error en GET por ID:", error);
+    console.error("Error en GET:", error);
     return NextResponse.json(
       { error: "Error al obtener el grupo" },
       { status: 500 }
@@ -78,53 +64,59 @@ export async function GET(request: Request, { params }: { params: { id: string }
 // PUT - Actualizar grupo
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = params.id;
-    
-    if (!/^\d+$/.test(id)) {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
-
     const body = await request.json();
     const validatedData = updateGrupoSchema.parse(body);
 
+    // Construir datos de actualización
     const updateData: any = {
-      ...validatedData,
-      ...(validatedData.dispositivoAsignadoId && {
-        dispositivoAsignadoId: BigInt(validatedData.dispositivoAsignadoId)
-      }),
-      ...(validatedData.historialId !== undefined && {
-        historialId: validatedData.historialId 
-          ? BigInt(validatedData.historialId) 
-          : null
-      })
+      nombre: validatedData.nombre
     };
 
+    // Manejo de relaciones
+    if (validatedData.usuarioId !== undefined) {
+      updateData.usuario = { connect: { id: BigInt(validatedData.usuarioId) } };
+    }
+
+    if (validatedData.historialId !== undefined) {
+      updateData.historial = validatedData.historialId
+        ? { connect: { id: BigInt(validatedData.historialId) } }
+        : { disconnect: true };
+    }
+
+    if (validatedData.dispositivosIds !== undefined) {
+      updateData.dispositivos = { set: validatedData.dispositivosIds.map(id => ({ id: BigInt(id) })) };
+    }
+
     const grupoActualizado = await prisma.usuarioGrupo.update({
-      where: { id: BigInt(id) },
-      data: updateData
+      where: { id: BigInt(params.id) },
+      data: updateData,
+      include: {
+        usuario: true,
+        historial: true,
+        dispositivos: true
+      }
+    });
+
+    // Función de conversión reutilizable
+    const convertEntity = (entity: any) => ({
+      ...entity,
+      id: entity.id.toString(),
+      ...(entity.historialId && { historialId: entity.historialId.toString() }),
+      usuarioId: entity.usuarioId.toString()
     });
 
     return NextResponse.json({
-      ...grupoActualizado,
-      id: grupoActualizado.id.toString(),
-      dispositivoAsignadoId: grupoActualizado.dispositivoAsignadoId.toString(),
-      historialId: grupoActualizado.historialId?.toString() || null
+      ...convertEntity(grupoActualizado),
+      usuario: convertEntity(grupoActualizado.usuario),
+      historial: grupoActualizado.historial ? convertEntity(grupoActualizado.historial) : null,
+      dispositivos: grupoActualizado.dispositivos.map(d => convertEntity(d))
     });
   } catch (error) {
     console.error("Error en PUT:", error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors.map(e => e.message) },
-        { status: 400 }
-      );
-    }
-    
     return NextResponse.json(
-      { error: "Error al actualizar el grupo" },
+      { error: error instanceof z.ZodError 
+        ? error.errors.map(e => e.message) 
+        : "Error al actualizar el grupo" },
       { status: 500 }
     );
   }
@@ -133,35 +125,22 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 // DELETE - Eliminar grupo
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = params.id;
-    
-    if (!/^\d+$/.test(id)) {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
-
-    const grupoEliminado = await prisma.usuarioGrupo.delete({
-      where: { id: BigInt(id) }
-    });
+    // Eliminar en cascada
+    await prisma.$transaction([
+      prisma.dispositivo.deleteMany({
+        where: { grupoId: BigInt(params.id) }
+      }),
+      prisma.usuarioGrupo.delete({
+        where: { id: BigInt(params.id) }
+      })
+    ]);
 
     return NextResponse.json({
-      ...grupoEliminado,
-      id: grupoEliminado.id.toString(),
-      dispositivoAsignadoId: grupoEliminado.dispositivoAsignadoId.toString(),
-      historialId: grupoEliminado.historialId?.toString() || null
+      message: "Grupo eliminado correctamente",
+      id: params.id
     });
   } catch (error) {
     console.error("Error en DELETE:", error);
-    
-    if ((error as any).code === "P2025") {
-      return NextResponse.json(
-        { error: "Grupo no encontrado" },
-        { status: 404 }
-      );
-    }
-    
     return NextResponse.json(
       { error: "Error al eliminar el grupo" },
       { status: 500 }
