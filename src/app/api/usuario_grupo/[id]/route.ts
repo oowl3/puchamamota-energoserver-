@@ -17,6 +17,69 @@ const updateGrupoSchema = z.object({
   dispositivosIds: z.array(z.string().regex(/^\d+$/)).optional()
 });
 
+// Tipos para conversión segura
+type GrupoEntity = {
+  id: bigint;
+  nombre?: string;
+  usuarioId: bigint;
+  historialId?: bigint | null;
+  usuario?: UserEntity;
+  historial?: HistorialEntity;
+  dispositivos?: DispositivoEntity[];
+};
+
+type UserEntity = {
+  id: bigint;
+  nombre: string;
+  apellido: string;
+  edad: bigint;
+  genero: string;
+  telefono: bigint | null;
+  tokenId: bigint | null;
+  configuracionId: bigint | null;
+  rolId: bigint | null;
+};
+
+type HistorialEntity = {
+  id: bigint;
+  // Agregar otros campos según necesidad
+};
+
+type DispositivoEntity = {
+  id: bigint;
+  grupoId?: bigint;
+  // Agregar otros campos según necesidad
+};
+
+// Función de conversión sobrecargada
+function convertEntity<T extends GrupoEntity>(entity: T): Omit<T, 'id' | 'usuarioId' | 'historialId'> & {
+  id: string;
+  usuarioId: string;
+  historialId?: string | null;
+};
+
+function convertEntity<T extends UserEntity | HistorialEntity | DispositivoEntity>(entity: T): Omit<T, 'id'> & {
+  id: string;
+};
+
+function convertEntity(entity: any): any {
+  const baseConversion = {
+    ...entity,
+    id: entity.id.toString(),
+  };
+
+  // Conversión específica para Grupo
+  if ('usuarioId' in entity) {
+    return {
+      ...baseConversion,
+      usuarioId: entity.usuarioId.toString(),
+      historialId: entity.historialId?.toString() || null,
+    };
+  }
+
+  return baseConversion;
+}
+
 // GET - Obtener grupo por ID
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -36,14 +99,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       );
     }
 
-    // Conversión segura de tipos BigInt
-    const convertEntity = (entity: any) => ({
-      ...entity,
-      id: entity.id.toString(),
-      ...(entity.historialId && { historialId: entity.historialId.toString() }),
-      usuarioId: entity.usuarioId.toString()
-    });
-
+    // Conversión tipo-safe
     const grupoConvertido = {
       ...convertEntity(grupo),
       usuario: grupo.usuario ? convertEntity(grupo.usuario) : null,
@@ -67,12 +123,18 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const body = await request.json();
     const validatedData = updateGrupoSchema.parse(body);
 
-    // Construir datos de actualización
-    const updateData: any = {
+    // Tipo para datos de actualización
+    type UpdateData = {
+      nombre?: string;
+      usuario?: { connect: { id: bigint } };
+      historial?: { connect: { id: bigint } } | { disconnect: true };
+      dispositivos?: { set: Array<{ id: bigint }> };
+    };
+
+    const updateData: UpdateData = {
       nombre: validatedData.nombre
     };
 
-    // Manejo de relaciones
     if (validatedData.usuarioId !== undefined) {
       updateData.usuario = { connect: { id: BigInt(validatedData.usuarioId) } };
     }
@@ -84,7 +146,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     if (validatedData.dispositivosIds !== undefined) {
-      updateData.dispositivos = { set: validatedData.dispositivosIds.map(id => ({ id: BigInt(id) })) };
+      updateData.dispositivos = { 
+        set: validatedData.dispositivosIds.map(id => ({ id: BigInt(id) })) 
+      };
     }
 
     const grupoActualizado = await prisma.usuarioGrupo.update({
@@ -95,14 +159,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         historial: true,
         dispositivos: true
       }
-    });
-
-    // Función de conversión reutilizable
-    const convertEntity = (entity: any) => ({
-      ...entity,
-      id: entity.id.toString(),
-      ...(entity.historialId && { historialId: entity.historialId.toString() }),
-      usuarioId: entity.usuarioId.toString()
     });
 
     return NextResponse.json({
@@ -125,7 +181,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 // DELETE - Eliminar grupo
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    // Eliminar en cascada
     await prisma.$transaction([
       prisma.dispositivo.deleteMany({
         where: { grupoId: BigInt(params.id) }
