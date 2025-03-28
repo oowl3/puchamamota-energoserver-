@@ -42,42 +42,43 @@ type UserEntity = {
 
 type HistorialEntity = {
   id: bigint;
-  // Agregar otros campos según necesidad
 };
 
 type DispositivoEntity = {
   id: bigint;
   grupoId?: bigint;
-  // Agregar otros campos según necesidad
 };
 
-// Función de conversión sobrecargada
-function convertEntity<T extends GrupoEntity>(entity: T): Omit<T, 'id' | 'usuarioId' | 'historialId'> & {
-  id: string;
-  usuarioId: string;
-  historialId?: string | null;
-};
+type ConvertibleEntity = GrupoEntity | UserEntity | HistorialEntity | DispositivoEntity;
 
-function convertEntity<T extends UserEntity | HistorialEntity | DispositivoEntity>(entity: T): Omit<T, 'id'> & {
-  id: string;
-};
-
-function convertEntity(entity: any): any {
-  const baseConversion = {
+// Función de conversión type-safe
+function convertEntity<T extends ConvertibleEntity>(entity: T): 
+  T extends GrupoEntity ? Omit<T, 'id' | 'usuarioId' | 'historialId'> & {
+    id: string;
+    usuarioId: string;
+    historialId?: string | null;
+  } :
+  T extends (UserEntity | HistorialEntity | DispositivoEntity) ? Omit<T, 'id'> & {
+    id: string;
+  } :
+  never {
+  
+  // Conversión base para todos los tipos
+  const baseConverted = {
     ...entity,
-    id: entity.id.toString(),
+    id: entity.id.toString()
   };
 
-  // Conversión específica para Grupo
+  // Conversión específica para GrupoEntity
   if ('usuarioId' in entity) {
     return {
-      ...baseConversion,
+      ...baseConverted,
       usuarioId: entity.usuarioId.toString(),
-      historialId: entity.historialId?.toString() || null,
-    };
+      historialId: entity.historialId?.toString() ?? null
+    } as never;
   }
 
-  return baseConversion;
+  return baseConverted as never;
 }
 
 // GET - Obtener grupo por ID
@@ -100,14 +101,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 
     // Conversión tipo-safe
-    const grupoConvertido = {
-      ...convertEntity(grupo),
-      usuario: grupo.usuario ? convertEntity(grupo.usuario) : null,
-      historial: grupo.historial ? convertEntity(grupo.historial) : null,
-      dispositivos: grupo.dispositivos.map(d => convertEntity(d))
-    };
+    const convertedGrupo = convertEntity(grupo);
+    const convertedUsuario = grupo.usuario ? convertEntity(grupo.usuario) : null;
+    const convertedHistorial = grupo.historial ? convertEntity(grupo.historial) : null;
+    const convertedDispositivos = grupo.dispositivos.map(convertEntity);
 
-    return NextResponse.json(grupoConvertido);
+    return NextResponse.json({
+      ...convertedGrupo,
+      usuario: convertedUsuario,
+      historial: convertedHistorial,
+      dispositivos: convertedDispositivos
+    });
   } catch (error) {
     console.error("Error en GET:", error);
     return NextResponse.json(
@@ -141,7 +145,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     if (validatedData.historialId !== undefined) {
       updateData.historial = validatedData.historialId
-        ? { connect: { id: BigInt(validatedData.historialId) } }
+        ? { connect: { id: BigInt(validatedData.historialId) } } // Corregido
         : { disconnect: true };
     }
 
@@ -165,7 +169,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       ...convertEntity(grupoActualizado),
       usuario: convertEntity(grupoActualizado.usuario),
       historial: grupoActualizado.historial ? convertEntity(grupoActualizado.historial) : null,
-      dispositivos: grupoActualizado.dispositivos.map(d => convertEntity(d))
+      dispositivos: grupoActualizado.dispositivos.map(convertEntity)
     });
   } catch (error) {
     console.error("Error en PUT:", error);
@@ -178,7 +182,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-// DELETE - Eliminar grupo
+// DELETE - Eliminar grupo (sin cambios necesarios)
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     await prisma.$transaction([
