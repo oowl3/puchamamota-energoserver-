@@ -2,8 +2,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-// Esquema para actualización
+// Esquema para validación
 const updateTokenSchema = z.object({
   token: z.string().min(10, "El token debe tener al menos 10 caracteres").optional()
 });
@@ -11,11 +12,10 @@ const updateTokenSchema = z.object({
 // GET - Obtener token por ID
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resolvedParams = await params;
-    const id = BigInt(resolvedParams.id);
+    const id = BigInt(params.id);
     
     const token = await prisma.usuarioToken.findUnique({
       where: { id },
@@ -29,6 +29,7 @@ export async function GET(
       );
     }
 
+    // Convertir BigInt a string para serialización
     const responseData = {
       ...token,
       id: token.id.toString(),
@@ -41,8 +42,16 @@ export async function GET(
     return NextResponse.json(responseData);
   } catch (error) {
     console.error("Error en GET por ID:", error);
+    
+    if (error instanceof TypeError) {
+      return NextResponse.json(
+        { error: "ID inválido" },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Error al obtener token" },
+      { error: "Error interno al obtener token" },
       { status: 500 }
     );
   }
@@ -51,11 +60,10 @@ export async function GET(
 // PUT - Actualizar token
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resolvedParams = await params;
-    const id = BigInt(resolvedParams.id);
+    const id = BigInt(params.id);
     const body = await request.json();
     const validatedData = updateTokenSchema.parse(body);
 
@@ -64,24 +72,37 @@ export async function PUT(
       data: validatedData
     });
 
-    const responseData = {
+    return NextResponse.json({
       ...tokenActualizado,
       id: tokenActualizado.id.toString()
-    };
-
-    return NextResponse.json(responseData);
+    });
   } catch (error) {
     console.error("Error en PUT:", error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Datos inválidos", detalles: error.errors },
+        { 
+          error: "Validación fallida",
+          detalles: error.errors.map(e => ({
+            campo: e.path.join('.'),
+            mensaje: e.message
+          }))
+        },
         { status: 400 }
       );
     }
     
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return NextResponse.json(
+          { error: "Token no encontrado" },
+          { status: 404 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: "Error al actualizar token" },
+      { error: "Error interno al actualizar token" },
       { status: 500 }
     );
   }
@@ -90,11 +111,10 @@ export async function PUT(
 // DELETE - Eliminar token
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resolvedParams = await params;
-    const id = BigInt(resolvedParams.id);
+    const id = BigInt(params.id);
     
     await prisma.usuarioToken.delete({
       where: { id }
@@ -104,15 +124,24 @@ export async function DELETE(
   } catch (error) {
     console.error("Error en DELETE:", error);
     
-    if ((error as any).code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return NextResponse.json(
+          { error: "Token no encontrado" },
+          { status: 404 }
+        );
+      }
+    }
+    
+    if (error instanceof TypeError) {
       return NextResponse.json(
-        { error: "Token no encontrado" },
-        { status: 404 }
+        { error: "ID inválido" },
+        { status: 400 }
       );
     }
     
     return NextResponse.json(
-      { error: "Error al eliminar token" },
+      { error: "Error interno al eliminar token" },
       { status: 500 }
     );
   }
