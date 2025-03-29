@@ -11,11 +11,21 @@ const alertaSchema = z.object({
   usuarioConfiguracionId: z.number().int().positive("ID de usuario inválido")
 });
 
+// Helper para parsear parámetros de ruta
+const parseRouteParam = (param: string | string[]): string => {
+  return Array.isArray(param) ? param[0] : param;
+};
+
 // GET: Obtener configuración por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string | string[] } }
+) {
   try {
+    const id = parseRouteParam(params.id);
+    
     const configuracion = await prisma.configuracionAlerta.findUnique({
-      where: { id: BigInt(params.id) },
+      where: { id: BigInt(id) },
       include: { usuarioConfiguracion: true }
     });
 
@@ -47,9 +57,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT: Actualizar configuración
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string | string[] } }
+) {
   try {
+    const id = parseRouteParam(params.id);
     const body = await request.json();
+    
     const validatedData = alertaSchema.parse({
       ...body,
       tiempo: Number(body.tiempo),
@@ -58,7 +73,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     });
 
     const configActualizada = await prisma.configuracionAlerta.update({
-      where: { id: BigInt(params.id) },
+      where: { id: BigInt(id) },
       data: {
         nombre: validatedData.nombre,
         tiempo: BigInt(validatedData.tiempo),
@@ -78,17 +93,30 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   } catch (error) {
     console.error("Error PUT configuración:", error);
     
-    return error instanceof z.ZodError 
-      ? NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-      : NextResponse.json({ error: "Error al actualizar configuración" }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Error al actualizar configuración" },
+      { status: 500 }
+    );
   }
 }
 
 // DELETE: Eliminar configuración
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string | string[] } }
+) {
   try {
+    const id = parseRouteParam(params.id);
+    
     await prisma.configuracionAlerta.delete({
-      where: { id: BigInt(params.id) }
+      where: { id: BigInt(id) }
     });
 
     return NextResponse.json(
