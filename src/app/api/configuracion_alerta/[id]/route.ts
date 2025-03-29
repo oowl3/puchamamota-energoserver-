@@ -11,21 +11,14 @@ const alertaSchema = z.object({
   usuarioConfiguracionId: z.number().int().positive("ID de usuario inválido")
 });
 
-// Helper para extraer el parámetro "id"
-const parseRouteParam = (param: string | string[]): string =>
-  Array.isArray(param) ? param[0] : param;
-
 // GET: Obtener configuración por ID
 export async function GET(
   request: Request,
-  context: { params: Record<string, string | string[]> }
+  { params }: { params: { id: string } } // Tipo más específico para params
 ) {
   try {
-    const { id } = context.params;
-    const idStr = parseRouteParam(id);
-    
     const configuracion = await prisma.configuracionAlerta.findUnique({
-      where: { id: BigInt(idStr) },
+      where: { id: BigInt(params.id) }, // Acceso directo a params.id
       include: { usuarioConfiguracion: true }
     });
 
@@ -59,11 +52,9 @@ export async function GET(
 // PUT: Actualizar configuración
 export async function PUT(
   request: Request,
-  context: { params: Record<string, string | string[]> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = context.params;
-    const idStr = parseRouteParam(id);
     const body = await request.json();
     
     const validatedData = alertaSchema.parse({
@@ -74,7 +65,7 @@ export async function PUT(
     });
 
     const configActualizada = await prisma.configuracionAlerta.update({
-      where: { id: BigInt(idStr) },
+      where: { id: BigInt(params.id) }, // Acceso directo a params.id
       data: {
         nombre: validatedData.nombre,
         tiempo: BigInt(validatedData.tiempo),
@@ -111,14 +102,11 @@ export async function PUT(
 // DELETE: Eliminar configuración
 export async function DELETE(
   request: Request,
-  context: { params: Record<string, string | string[]> }
+  { params }: { params: { id: string } }
 ) {
-  try {
-    const { id } = context.params;
-    const idStr = parseRouteParam(id);
-    
+  try {    
     await prisma.configuracionAlerta.delete({
-      where: { id: BigInt(idStr) }
+      where: { id: BigInt(params.id) } // Acceso directo a params.id
     });
 
     return NextResponse.json(
