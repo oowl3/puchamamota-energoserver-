@@ -12,9 +12,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ```bash
 
 # Cosas a instalar
-npm install next-auth
 npm install prisma @prisma/client
-npm install @next-auth/prisma-adapter
 npm install decimal.js
 npm i zod
 
