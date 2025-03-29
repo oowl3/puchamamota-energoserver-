@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación compartido
 const configSchema = z.object({
   nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
   tiempo: z.number().int().nonnegative("El tiempo no puede ser negativo"),
@@ -11,15 +10,11 @@ const configSchema = z.object({
   usuarioConfiguracionId: z.number().int().positive("ID de usuario inválido"),
 });
 
-// Tipos para parámetros de ruta
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // GET: Obtener configuración por ID
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const configuracion = await prisma.configuracionAlerta.findUnique({
       where: { id: BigInt(params.id) },
@@ -53,7 +48,10 @@ export async function GET(request: Request, { params }: RouteParams) {
 }
 
 // PUT: Actualizar configuración
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const body = await request.json();
     const validatedData = configSchema.parse({
@@ -63,7 +61,6 @@ export async function PUT(request: Request, { params }: RouteParams) {
       usuarioConfiguracionId: Number(body.usuarioConfiguracionId),
     });
 
-    // Verificar existencia de la configuración
     const configExistente = await prisma.configuracionAlerta.findUnique({
       where: { id: BigInt(params.id) },
     });
@@ -75,7 +72,6 @@ export async function PUT(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Verificar existencia del usuario
     const usuarioExiste = await prisma.usuarioConfiguracion.findUnique({
       where: { id: BigInt(validatedData.usuarioConfiguracionId) },
     });
@@ -87,7 +83,6 @@ export async function PUT(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Actualizar la configuración
     const configActualizada = await prisma.configuracionAlerta.update({
       where: { id: BigInt(params.id) },
       data: {
@@ -107,14 +102,12 @@ export async function PUT(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Error PUT configuración:", error);
-    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors[0].message },
         { status: 400 }
       );
     }
-    
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
@@ -123,9 +116,11 @@ export async function PUT(request: Request, { params }: RouteParams) {
 }
 
 // DELETE: Eliminar configuración
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Verificar existencia de la configuración
     const configExistente = await prisma.configuracionAlerta.findUnique({
       where: { id: BigInt(params.id) },
     });
@@ -137,7 +132,6 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Eliminar la configuración
     await prisma.configuracionAlerta.delete({
       where: { id: BigInt(params.id) },
     });
