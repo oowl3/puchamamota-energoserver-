@@ -1,21 +1,33 @@
-// app/api/grupo-historial/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+
+const idSchema = z.object({
+  id: z.coerce.bigint({ invalid_type_error: "ID inválido" }).positive("ID debe ser positivo")
+});
 
 const grupoHistorialSchema = z.object({
   periodo: z.coerce.number().int().nonnegative().optional(),
   fechaCorte: z.coerce.date().optional(),
   consumo: z.coerce.number().int().nonnegative().optional(),
-});
+}).transform(data => ({
+  ...data,
+  periodo: data.periodo ? BigInt(data.periodo) : undefined,
+  consumo: data.consumo ? BigInt(data.consumo) : undefined
+}));
 
 // GET: Obtener un registro específico por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = z.string().min(1).parse(params.id);
+    const { id: idString } = await params;
+    const { id } = idSchema.parse({ id: idString });
 
     const historial = await prisma.grupoHistorial.findUnique({
-      where: { id: BigInt(id) },
+      where: { id },
       include: { grupos: true }
     });
 
@@ -40,41 +52,36 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
   } catch (error) {
     console.error("Error GET GrupoHistorial por ID:", error);
-    return error instanceof z.ZodError 
-      ? NextResponse.json({ error: "ID inválido" }, { status: 400 })
-      : NextResponse.json(
-          { error: "Error al obtener el registro histórico" },
-          { status: 500 }
-        );
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Error al obtener el registro histórico" },
+      { status: 500 }
+    );
   }
 }
 
 // PUT: Actualizar un registro existente
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = z.string().min(1).parse(params.id);
+    const { id: idString } = await params;
+    const { id } = idSchema.parse({ id: idString });
     const body = await request.json();
+    
     const validatedData = grupoHistorialSchema.parse(body);
 
-    // Verificar existencia del registro
-    const existeRegistro = await prisma.grupoHistorial.findUnique({
-      where: { id: BigInt(id) }
-    });
-
-    if (!existeRegistro) {
-      return NextResponse.json(
-        { error: "Registro histórico no encontrado" },
-        { status: 404 }
-      );
-    }
-
     const actualizado = await prisma.grupoHistorial.update({
-      where: { id: BigInt(id) },
-      data: {
-        periodo: validatedData.periodo ? BigInt(validatedData.periodo) : undefined,
-        fechaCorte: validatedData.fechaCorte,
-        consumo: validatedData.consumo ? BigInt(validatedData.consumo) : undefined,
-      }
+      where: { id },
+      data: validatedData
     });
 
     return NextResponse.json({
@@ -87,23 +94,38 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
   } catch (error) {
     console.error("Error PUT GrupoHistorial:", error);
-    return error instanceof z.ZodError 
-      ? NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-      : NextResponse.json(
-          { error: "Error al actualizar el registro" },
-          { status: 500 }
-        );
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { error: "Registro histórico no encontrado" },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Error al actualizar el registro" },
+      { status: 500 }
+    );
   }
 }
 
 // DELETE: Eliminar un registro
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = z.string().min(1).parse(params.id);
+    const { id: idString } = await params;
+    const { id } = idSchema.parse({ id: idString });
 
-    await prisma.grupoHistorial.delete({
-      where: { id: BigInt(id) }
-    });
+    await prisma.grupoHistorial.delete({ where: { id } });
 
     return NextResponse.json(
       { message: "Registro histórico eliminado correctamente" },
@@ -112,11 +134,24 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
   } catch (error) {
     console.error("Error DELETE GrupoHistorial:", error);
-    return error instanceof z.ZodError 
-      ? NextResponse.json({ error: "ID inválido" }, { status: 400 })
-      : NextResponse.json(
-          { error: "Error al eliminar el registro" },
-          { status: 500 }
-        );
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { error: "Registro no encontrado" },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Error al eliminar el registro" },
+      { status: 500 }
+    );
   }
 }
