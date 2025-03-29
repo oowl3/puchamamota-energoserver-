@@ -15,9 +15,6 @@ const usuarioConfigSchema = z.object({
   planActualId: z.string().regex(/^\d+$/, "ID de plan inválido")
 });
 
-// Tipo inferido del esquema Zod
-type UsuarioConfigSchema = z.infer<typeof usuarioConfigSchema>;
-
 // Tipo para la respuesta
 type UsuarioConfigResponse = {
   id: string;
