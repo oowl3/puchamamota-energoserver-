@@ -11,17 +11,15 @@ const updateConsejoSchema = z.object({
   informacion: z.string().min(1, "La información no puede estar vacía")
 });
 
-// Función auxiliar para manejar parámetros asíncronos
-async function handleParams(paramsPromise: Promise<{ id: string }>) {
-  const params = await paramsPromise;
-  return idParamSchema.parse({ id: params.id });
-}
-
 // GET: Obtener un consejo por ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     // Acceso asíncrono a los parámetros
-    const { id } = await handleParams(Promise.resolve(params));
+    const { id: idString } = await params;
+    const { id } = idParamSchema.parse({ id: idString });
 
     const consejo = await prisma.consejo.findUnique({
       where: { id }
@@ -57,10 +55,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT: Actualizar un consejo
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Acceso asíncrono a los parámetros
-    const { id } = await handleParams(Promise.resolve(params));
+    // Acceso asíncrono a parámetros
+    const { id: idString } = await params;
+    const { id } = idParamSchema.parse({ id: idString });
     
     // Validar cuerpo
     const body = await request.json();
@@ -101,10 +103,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE: Eliminar un consejo
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Acceso asíncrono a los parámetros
-    const { id } = await handleParams(Promise.resolve(params));
+    // Acceso asíncrono a parámetros
+    const { id: idString } = await params;
+    const { id } = idParamSchema.parse({ id: idString });
 
     await prisma.consejo.delete({
       where: { id }

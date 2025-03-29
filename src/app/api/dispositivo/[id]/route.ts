@@ -1,29 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-// Esquema para actualización
+// Esquemas de validación
+const idSchema = z.object({
+  id: z.coerce.bigint().positive("ID inválido")
+});
+
 const updateDispositivoSchema = z.object({
   codigoEspUsuario: z.number().int().positive().optional(),
   nombreDispositivo: z.string().min(1).optional(),
   nombreAparato: z.string().min(1).optional(),
   consumoAparatoSug: z.number().int().positive().optional(),
   ubicacionId: z.number().int().positive().optional(),
-  grupoId: z.number().int().positive().optional().nullable()
+  grupoId: z.number().int().positive().nullable().optional()
 });
 
 // GET: Obtener dispositivo por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = BigInt(params.id);
+    const { id: idString } = await params;
+    const { id } = idSchema.parse({ id: idString });
     
     const dispositivo = await prisma.dispositivo.findUnique({
       where: { id },
-      include: {
-        listaUbicacion: true,
-        grupo: true
-      }
+      include: { listaUbicacion: true, grupo: true }
     });
 
     if (!dispositivo) {
@@ -33,7 +38,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
       );
     }
 
-    // Convertir BigInt a string para serialización
     return NextResponse.json({
       ...dispositivo,
       id: dispositivo.id.toString(),
@@ -46,9 +50,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   } catch (error) {
     console.error("Error GET dispositivo por ID:", error);
     
-    if (error instanceof TypeError) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "ID inválido" },
+        { error: error.errors[0].message },
         { status: 400 }
       );
     }
@@ -61,10 +65,15 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT: Actualizar dispositivo
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = BigInt(params.id);
+    const { id: idString } = await params;
+    const { id } = idSchema.parse({ id: idString });
     const body = await request.json();
+    
     const validatedData = updateDispositivoSchema.parse(body);
 
     const dispositivoActualizado = await prisma.dispositivo.update({
@@ -73,10 +82,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         ...validatedData,
         grupoId: validatedData.grupoId === null ? null : validatedData.grupoId
       },
-      include: {
-        listaUbicacion: true,
-        grupo: true
-      }
+      include: { listaUbicacion: true, grupo: true }
     });
 
     return NextResponse.json({
@@ -104,19 +110,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       );
     }
     
-    if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
-        return NextResponse.json(
-          { error: "Dispositivo no encontrado" },
-          { status: 404 }
-        );
-      }
-    }
-    
-    if (error instanceof TypeError) {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
       return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
+        { error: "Dispositivo no encontrado" },
+        { status: 404 }
       );
     }
     
@@ -128,31 +125,31 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE: Eliminar dispositivo
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = BigInt(params.id);
-    
-    await prisma.dispositivo.delete({
-      where: { id }
-    });
+    const { id: idString } = await params;
+    const { id } = idSchema.parse({ id: idString });
+
+    await prisma.dispositivo.delete({ where: { id } });
 
     return new NextResponse(null, { status: 204 });
 
   } catch (error) {
     console.error("Error DELETE dispositivo:", error);
     
-    if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
-        return NextResponse.json(
-          { error: "Dispositivo no encontrado" },
-          { status: 404 }
-        );
-      }
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { error: "Dispositivo no encontrado" },
+        { status: 404 }
+      );
     }
     
-    if (error instanceof TypeError) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "ID inválido" },
+        { error: error.errors[0].message },
         { status: 400 }
       );
     }
