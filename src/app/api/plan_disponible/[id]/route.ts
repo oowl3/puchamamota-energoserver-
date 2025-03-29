@@ -1,141 +1,97 @@
-// src/app/api/planes-disponibles/[id]/route.ts
+// src/app/api/planes-disponibles/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import type { PlanDisponible } from "@prisma/client";
+import { z } from "zod";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
-
-const convertirPlan = (plan: PlanDisponible) => ({
-  ...plan,
-  id: plan.id.toString(),
-  duracion: plan.duracion.toString(),
-  costo: plan.costo.toString(),
+// Esquema de validación
+const planSchema = z.object({
+  nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+  descripcion: z.string().optional().default(""),
+  duracion: z.number().int().positive("La duración debe ser un número positivo"),
+  costo: z.number().int().nonnegative("El costo no puede ser negativo")
 });
 
-// GET: Obtener plan por ID
-export async function GET(
-  _: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// Tipo para la respuesta
+type PlanResponse = {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  duracion: string;
+  costo: string;
+};
+
+// GET: Obtener todos los planes
+export async function GET(): Promise<NextResponse<PlanResponse[] | { error: string }>> {
   try {
-    const { id } = await params;
-    const planId = Number(id);
+    const planes = await prisma.planDisponible.findMany();
     
-    if (isNaN(planId)) {
-      return NextResponse.json(
-        { error: "ID no válido" },
-        { status: 400, headers: corsHeaders }
-      );
-    }
+    const responseData: PlanResponse[] = planes.map(plan => ({
+      id: plan.id.toString(),
+      nombre: plan.nombre,
+      descripcion: plan.descripcion ?? undefined,
+      duracion: plan.duracion.toString(),
+      costo: plan.costo.toString()
+    }));
 
-    const plan = await prisma.planDisponible.findUnique({
-      where: { id: planId },
-    });
-
-    if (!plan) {
-      return NextResponse.json(
-        { error: "Plan no encontrado" },
-        { status: 404, headers: corsHeaders }
-      );
-    }
-
-    return NextResponse.json(convertirPlan(plan), { headers: corsHeaders });
+    return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error("Error GET plan:", error);
+    console.error("Error GET planes:", error);
     return NextResponse.json(
-      { error: "Error al obtener plan" },
-      { status: 500, headers: corsHeaders }
+      { error: "Error al obtener planes" },
+      { status: 500 }
     );
   }
 }
 
-// PUT: Actualizar plan
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// POST: Crear nuevo plan
+export async function POST(request: Request): Promise<NextResponse<PlanResponse | { error: string }>> {
   try {
-    const { id } = await params;
-    const planId = Number(id);
-    const body = await request.json();
-
-    if (isNaN(planId)) {
-      return NextResponse.json(
-        { error: "ID no válido" },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    // Validaciones
-    if (body.nombre && body.nombre.trim().length < 3) {
-      return NextResponse.json(
-        { error: "Nombre debe tener al menos 3 caracteres" },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    const datosActualizados: any = {};
-    if (body.nombre) datosActualizados.nombre = body.nombre;
-    if (body.descripcion) datosActualizados.descripcion = body.descripcion;
-    if (body.duracion) datosActualizados.duracion = BigInt(body.duracion);
-    if (body.costo) datosActualizados.costo = BigInt(body.costo);
-
-    const planActualizado = await prisma.planDisponible.update({
-      where: { id: planId },
-      data: datosActualizados,
+    const body: unknown = await request.json();
+    
+    // Validar y convertir tipos
+    const rawData = body as Record<string, unknown>;
+    const validatedData = planSchema.parse({
+      nombre: rawData.nombre,
+      descripcion: rawData.descripcion,
+      duracion: Number(rawData.duracion),
+      costo: Number(rawData.costo)
     });
 
-    return NextResponse.json(convertirPlan(planActualizado), { headers: corsHeaders });
-
-  } catch (error) {
-    console.error("Error PUT plan:", error);
-    return NextResponse.json(
-      { error: "Error al actualizar plan" },
-      { status: 500, headers: corsHeaders }
-    );
-  }
-}
-
-// DELETE: Eliminar plan
-export async function DELETE(
-  _: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const planId = Number(id);
-
-    if (isNaN(planId)) {
-      return NextResponse.json(
-        { error: "ID no válido" },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    await prisma.planDisponible.delete({
-      where: { id: planId },
+    // Crear en base de datos
+    const nuevoPlan = await prisma.planDisponible.create({
+      data: {
+        nombre: validatedData.nombre,
+        descripcion: validatedData.descripcion,
+        duracion: BigInt(validatedData.duracion),
+        costo: BigInt(validatedData.costo)
+      }
     });
 
-    return NextResponse.json(
-      { message: "Plan eliminado correctamente" },
-      { headers: corsHeaders }
-    );
+    // Convertir BigInt a string para respuesta
+    const responseData: PlanResponse = {
+      id: nuevoPlan.id.toString(),
+      nombre: nuevoPlan.nombre,
+      descripcion: nuevoPlan.descripcion ?? undefined,
+      duracion: nuevoPlan.duracion.toString(),
+      costo: nuevoPlan.costo.toString()
+    };
+
+    return NextResponse.json(responseData, { status: 201 });
 
   } catch (error) {
-    console.error("Error DELETE plan:", error);
+    console.error("Error POST plan:", error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Error al eliminar plan" },
-      { status: 500, headers: corsHeaders }
+      { error: "Error al crear plan" },
+      { status: 500 }
     );
   }
-}
-
-// OPTIONS
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders });
 }
