@@ -11,18 +11,13 @@ const alertaSchema = z.object({
   usuarioConfiguracionId: z.number().int().positive("ID de usuario inválido")
 });
 
-// Helper para parsear parámetros de ruta
-const parseRouteParam = (param: string | string[]): string => {
-  return Array.isArray(param) ? param[0] : param;
-};
-
 // GET: Obtener configuración por ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = parseRouteParam(params.id);
+    const id = params.id;
     
     const configuracion = await prisma.configuracionAlerta.findUnique({
       where: { id: BigInt(id) },
@@ -59,10 +54,10 @@ export async function GET(
 // PUT: Actualizar configuración
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = parseRouteParam(params.id);
+    const id = params.id;
     const body = await request.json();
     
     const validatedData = alertaSchema.parse({
@@ -110,10 +105,10 @@ export async function PUT(
 // DELETE: Eliminar configuración
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = parseRouteParam(params.id);
+    const id = params.id;
     
     await prisma.configuracionAlerta.delete({
       where: { id: BigInt(id) }
