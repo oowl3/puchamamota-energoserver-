@@ -1,34 +1,28 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+
+// Esquemas de validación
+const idSchema = z.object({
+  id: z.coerce.number({
+    invalid_type_error: "ID debe ser un número válido",
+    required_error: "Se requiere el ID"
+  }).int().positive("ID debe ser un número positivo")
+});
 
 const ubicacionSchema = z.object({
   ubicacion: z.string().min(1, "La ubicación no puede estar vacía")
 });
 
-type PrismaError = {
-  code: string;
-  meta?: {
-    target?: string[];
-  };
-};
-
 // GET: Obtener ubicación por ID
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Acceso asincrónico a params
     const { id: paramId } = await params;
-    const id = parseInt(paramId);
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "ID debe ser un número válido" },
-        { status: 400 }
-      );
-    }
+    const { id } = idSchema.parse({ id: paramId });
 
     const ubicacion = await prisma.listaUbicacion.findUnique({
       where: { id }
@@ -48,6 +42,14 @@ export async function GET(
 
   } catch (error) {
     console.error("Error GET ubicación por ID:", error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { error: "Error al obtener ubicación" },
       { status: 500 }
@@ -57,29 +59,21 @@ export async function GET(
 
 // PUT: Actualizar ubicación
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Acceso asincrónico a params y body
     const [{ id: paramId }, body] = await Promise.all([
       params,
       request.json()
     ]);
     
-    const id = parseInt(paramId);
+    const { id } = idSchema.parse({ id: paramId });
     const validatedData = ubicacionSchema.parse(body);
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "ID debe ser un número válido" },
-        { status: 400 }
-      );
-    }
 
     const ubicacionActualizada = await prisma.listaUbicacion.update({
       where: { id },
-      data: { ubicacion: validatedData.ubicacion }
+      data: validatedData
     });
 
     return NextResponse.json({
@@ -97,9 +91,8 @@ export async function PUT(
       );
     }
     
-    if (error instanceof Error && 'code' in error) {
-      const prismaError = error as PrismaError;
-      if (prismaError.code === 'P2025') {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
         return NextResponse.json(
           { error: "Ubicación no encontrada" },
           { status: 404 }
@@ -116,20 +109,12 @@ export async function PUT(
 
 // DELETE: Eliminar ubicación
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Acceso asincrónico a params
     const { id: paramId } = await params;
-    const id = parseInt(paramId);
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "ID debe ser un número válido" },
-        { status: 400 }
-      );
-    }
+    const { id } = idSchema.parse({ id: paramId });
 
     await prisma.listaUbicacion.delete({
       where: { id }
@@ -143,14 +128,18 @@ export async function DELETE(
   } catch (error) {
     console.error("Error DELETE ubicación:", error);
     
-    if (error instanceof Error && 'code' in error) {
-      const prismaError = error as PrismaError;
-      if (prismaError.code === 'P2025') {
-        return NextResponse.json(
-          { error: "Ubicación no encontrada" },
-          { status: 404 }
-        );
-      }
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { error: "Ubicación no encontrada" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(
