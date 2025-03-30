@@ -1,119 +1,142 @@
-// src/app/api/usuario_grupo/route.ts
+// src/app/api/usuario_grupo/[id]/route.ts
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación
-const grupoSchema = z.object({
-  nombre: z.string().min(1, "El nombre es requerido"),
-  usuarioId: z.coerce.string()
-    .regex(/^\d+$/, "ID de usuario inválido"),
-  historialId: z.coerce.string()
-    .regex(/^\d+$/, "ID de historial inválido")
-    .optional()
-    .nullable()
-    .transform(val => val === "" ? null : val),
-  dispositivosIds: z.array(z.string().regex(/^\d+$/)).optional()
+// Esquemas de validación
+const idParamSchema = z.object({
+  id: z.coerce.number().positive("ID debe ser un número positivo")
 });
 
-// POST - Crear nuevo grupo
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const validatedData = grupoSchema.parse(body);
+const updateConsejoSchema = z.object({
+  informacion: z.string().min(1, "La información no puede estar vacía")
+});
 
-    const nuevoGrupo = await prisma.usuarioGrupo.create({
-      data: {
-        nombre: validatedData.nombre,
-        usuario: {
-          connect: { id: BigInt(validatedData.usuarioId) }
-        },
-        historial: validatedData.historialId ? {
-          connect: { id: BigInt(validatedData.historialId) }
-        } : undefined,
-        dispositivos: validatedData.dispositivosIds ? {
-          connect: validatedData.dispositivosIds.map(id => ({
-            id: BigInt(id)
-          }))
-        } : undefined
-      },
-      include: {
-        usuario: true,
-        historial: true,
-        dispositivos: true
-      }
+// GET: Obtener un consejo por ID
+export async function GET(
+  _request: NextRequest, // Usamos _ para indicar parámetro no usado
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: idString } = await params;
+    const { id } = idParamSchema.parse({ id: idString });
+
+    const consejo = await prisma.consejo.findUnique({
+      where: { id }
     });
 
+    if (!consejo) {
+      return NextResponse.json(
+        { error: "Consejo no encontrado" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({
-      ...nuevoGrupo,
-      id: nuevoGrupo.id.toString(),
-      usuarioId: nuevoGrupo.usuarioId.toString(),
-      historialId: nuevoGrupo.historialId?.toString() || null,
-      usuario: {
-        ...nuevoGrupo.usuario,
-        id: nuevoGrupo.usuario.id.toString()
-      },
-      historial: nuevoGrupo.historial ? {
-        ...nuevoGrupo.historial,
-        id: nuevoGrupo.historial.id.toString()
-      } : null,
-      dispositivos: nuevoGrupo.dispositivos.map(d => ({
-        ...d,
-        id: d.id.toString(),
-        grupoId: d.grupoId?.toString()
-      }))
-    }, { status: 201 });
+      ...consejo,
+      id: consejo.id.toString()
+    });
+
   } catch (error) {
-    console.error("Error en POST:", error);
+    console.error("Error GET consejo por ID:", error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: error instanceof z.ZodError 
-        ? error.errors.map(e => e.message) 
-        : "Error al crear el grupo" },
-      { status: error instanceof z.ZodError ? 400 : 500 }
+      { error: "Error al obtener el consejo" },
+      { status: 500 }
     );
   }
 }
 
-// GET - Obtener todos los grupos
-export async function GET() {
+// PUT: Actualizar un consejo
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const grupos = await prisma.usuarioGrupo.findMany({
-      include: {
-        usuario: true,
-        historial: true,
-        dispositivos: true
-      }
+    const { id: idString } = await params;
+    const { id } = idParamSchema.parse({ id: idString });
+    
+    const body = await request.json();
+    const validatedData = updateConsejoSchema.parse(body);
+
+    const consejoActualizado = await prisma.consejo.update({
+      where: { id },
+      data: validatedData
     });
 
-    const gruposConvertidos = grupos.map(grupo => ({
-      ...grupo,
-      id: grupo.id.toString(),
-      usuarioId: grupo.usuarioId.toString(),
-      historialId: grupo.historialId?.toString() || null,
-      usuario: {
-        ...grupo.usuario,
-        id: grupo.usuario.id.toString(),
-        configuracionId: grupo.usuario.configuracionId?.toString(),
-        rolId: grupo.usuario.rolId?.toString(),
-        tokenId: grupo.usuario.tokenId?.toString()
-      },
-      historial: grupo.historial ? {
-        ...grupo.historial,
-        id: grupo.historial.id.toString()
-      } : null,
-      dispositivos: grupo.dispositivos.map(d => ({
-        ...d,
-        id: d.id.toString(),
-        grupoId: d.grupoId?.toString(),
-        ubicacionId: d.ubicacionId.toString()
-      }))
-    }));
+    return NextResponse.json({
+      ...consejoActualizado,
+      id: consejoActualizado.id.toString()
+    });
 
-    return NextResponse.json(gruposConvertidos);
   } catch (error) {
-    console.error("Error en GET:", error);
+    console.error("Error PUT consejo:", error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    if (error instanceof Error && error.message.includes("P2025")) {
+      return NextResponse.json(
+        { error: "Consejo no encontrado" },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Error al obtener los grupos" },
+      { error: "Error al actualizar el consejo" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Eliminar un consejo
+export async function DELETE(
+  _request: NextRequest, // Usamos _ para parámetro no usado
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: idString } = await params;
+    const { id } = idParamSchema.parse({ id: idString });
+
+    await prisma.consejo.delete({
+      where: { id }
+    });
+
+    return NextResponse.json(
+      { message: "Consejo eliminado correctamente" },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("Error DELETE consejo:", error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    if (error instanceof Error && error.message.includes("P2025")) {
+      return NextResponse.json(
+        { error: "Consejo no encontrado" },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Error al eliminar el consejo" },
       { status: 500 }
     );
   }
