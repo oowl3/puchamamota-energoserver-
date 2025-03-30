@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET - Obtener todos los grupos
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const grupos = await prisma.usuarioGrupo.findMany({
       include: {
