@@ -1,24 +1,30 @@
 // app/api/usuario-token/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-// Esquema para validación
+// Esquemas de validación
+const tokenIdSchema = z.object({
+  id: z.string().regex(/^\d+$/, "ID debe ser un número válido")
+});
+
 const updateTokenSchema = z.object({
   token: z.string().min(10, "El token debe tener al menos 10 caracteres").optional()
 });
 
 // GET - Obtener token por ID
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = BigInt(params.id);
+    const { id } = await params;
+    const { id: validId } = tokenIdSchema.parse({ id });
+    const tokenId = BigInt(validId);
     
     const token = await prisma.usuarioToken.findUnique({
-      where: { id },
+      where: { id: tokenId },
       include: { usuarios: true }
     });
 
@@ -29,29 +35,26 @@ export async function GET(
       );
     }
 
-    // Convertir BigInt a string para serialización
-    const responseData = {
+    return NextResponse.json({
       ...token,
       id: token.id.toString(),
       usuarios: token.usuarios.map(usuario => ({
         ...usuario,
         id: usuario.id.toString()
       }))
-    };
-
-    return NextResponse.json(responseData);
+    });
   } catch (error) {
-    console.error("Error en GET por ID:", error);
+    console.error("Error GET token:", error);
     
-    if (error instanceof TypeError) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "ID inválido" },
+        { error: error.errors[0].message },
         { status: 400 }
       );
     }
     
     return NextResponse.json(
-      { error: "Error interno al obtener token" },
+      { error: "Error al obtener token" },
       { status: 500 }
     );
   }
@@ -59,50 +62,50 @@ export async function GET(
 
 // PUT - Actualizar token
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = BigInt(params.id);
+    const { id } = await params;
+    const { id: validId } = tokenIdSchema.parse({ id });
+    const tokenId = BigInt(validId);
+    
     const body = await request.json();
     const validatedData = updateTokenSchema.parse(body);
 
     const tokenActualizado = await prisma.usuarioToken.update({
-      where: { id },
-      data: validatedData
+      where: { id: tokenId },
+      data: validatedData,
+      include: { usuarios: true }
     });
 
     return NextResponse.json({
       ...tokenActualizado,
-      id: tokenActualizado.id.toString()
+      id: tokenActualizado.id.toString(),
+      usuarios: tokenActualizado.usuarios.map(u => ({
+        ...u,
+        id: u.id.toString()
+      }))
     });
   } catch (error) {
-    console.error("Error en PUT:", error);
+    console.error("Error PUT token:", error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { 
-          error: "Validación fallida",
-          detalles: error.errors.map(e => ({
-            campo: e.path.join('.'),
-            mensaje: e.message
-          }))
-        },
+        { error: error.errors.map(e => e.message) },
         { status: 400 }
       );
     }
     
-    if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
-        return NextResponse.json(
-          { error: "Token no encontrado" },
-          { status: 404 }
-        );
-      }
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { error: "Token no encontrado" },
+        { status: 404 }
+      );
     }
     
     return NextResponse.json(
-      { error: "Error interno al actualizar token" },
+      { error: "Error al actualizar token" },
       { status: 500 }
     );
   }
@@ -110,38 +113,41 @@ export async function PUT(
 
 // DELETE - Eliminar token
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = BigInt(params.id);
+    const { id } = await params;
+    const { id: validId } = tokenIdSchema.parse({ id });
+    const tokenId = BigInt(validId);
     
     await prisma.usuarioToken.delete({
-      where: { id }
+      where: { id: tokenId }
     });
 
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json(
+      null,
+      { status: 204 }
+    );
   } catch (error) {
-    console.error("Error en DELETE:", error);
+    console.error("Error DELETE token:", error);
     
-    if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
-        return NextResponse.json(
-          { error: "Token no encontrado" },
-          { status: 404 }
-        );
-      }
-    }
-    
-    if (error instanceof TypeError) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "ID inválido" },
+        { error: error.errors[0].message },
         { status: 400 }
       );
     }
     
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') {
+      return NextResponse.json(
+        { error: "Token no encontrado" },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Error interno al eliminar token" },
+      { error: "Error al eliminar token" },
       { status: 500 }
     );
   }

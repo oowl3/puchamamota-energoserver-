@@ -1,139 +1,77 @@
-// src/app/api/usuario_grupo/[id]/route.ts
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquemas de validación
-const idParamSchema = z.object({
-  id: z.coerce.number().positive("ID debe ser un número positivo")
+const updateSchema = z.object({
+  rol: z.string().min(3).optional(),
+  permisoIds: z.array(z.coerce.bigint()).optional()
 });
 
-const updateGrupoSchema = z.object({
-  nombre: z.string().min(1, "El nombre es requerido"),
-  usuarioId: z.coerce.number().positive("ID de usuario inválido"),
-  historialId: z.coerce.number().positive("ID de historial inválido").nullable().optional(),
-  dispositivosIds: z.array(z.coerce.number().positive()).optional()
-});
-
-// GET: Obtener grupo por ID
+// GET - Obtener rol por ID
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params;
-    const { id } = idParamSchema.parse({ id: idString });
+    const { id } = await params;
+    const rolId = BigInt(id);
 
-    const grupo = await prisma.usuarioGrupo.findUnique({
-      where: { id: BigInt(id) },
-      include: {
-        usuario: true,
-        historial: true,
-        dispositivos: true
-      }
+    const rol = await prisma.usuarioRol.findUnique({
+      where: { id: rolId },
+      include: { permisos: true }
     });
 
-    if (!grupo) {
+    if (!rol) {
       return NextResponse.json(
-        { error: "Grupo no encontrado" },
+        { error: "Rol no encontrado" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
-      ...grupo,
-      id: grupo.id.toString(),
-      usuarioId: grupo.usuarioId.toString(),
-      historialId: grupo.historialId?.toString() || null,
-      usuario: {
-        ...grupo.usuario,
-        id: grupo.usuario.id.toString()
-      },
-      historial: grupo.historial ? {
-        ...grupo.historial,
-        id: grupo.historial.id.toString()
-      } : null,
-      dispositivos: grupo.dispositivos.map(d => ({
-        ...d,
-        id: d.id.toString(),
-        grupoId: d.grupoId?.toString()
-      }))
+      ...rol,
+      id: rol.id.toString(),
+      permisos: rol.permisos.map(p => p.id.toString())
     });
-
   } catch (error) {
-    console.error("Error GET grupo:", error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      );
-    }
-    
+    console.error("Error GET:", error);
     return NextResponse.json(
-      { error: "Error al obtener el grupo" },
+      { error: "Error al obtener rol" },
       { status: 500 }
     );
   }
 }
 
-// PUT: Actualizar grupo
+// PUT - Actualizar rol
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params;
-    const { id } = idParamSchema.parse({ id: idString });
+    const { id } = await params;
+    const rolId = BigInt(id);
     
     const body = await request.json();
-    const validatedData = updateGrupoSchema.parse(body);
+    const validatedData = updateSchema.parse(body);
 
-    const grupoActualizado = await prisma.usuarioGrupo.update({
-      where: { id: BigInt(id) },
+    const rolActualizado = await prisma.usuarioRol.update({
+      where: { id: rolId },
       data: {
-        nombre: validatedData.nombre,
-        usuario: {
-          connect: { id: BigInt(validatedData.usuarioId) }
-        },
-        historial: validatedData.historialId ? {
-          connect: { id: BigInt(validatedData.historialId) }
-        } : { disconnect: true },
-        dispositivos: validatedData.dispositivosIds ? {
-          set: validatedData.dispositivosIds.map(id => ({
-            id: BigInt(id)
-          }))
+        rol: validatedData.rol,
+        permisos: validatedData.permisoIds ? {
+          set: validatedData.permisoIds.map(id => ({ id }))
         } : undefined
       },
-      include: {
-        usuario: true,
-        historial: true,
-        dispositivos: true
-      }
+      include: { permisos: true }
     });
 
     return NextResponse.json({
-      ...grupoActualizado,
-      id: grupoActualizado.id.toString(),
-      usuarioId: grupoActualizado.usuarioId.toString(),
-      historialId: grupoActualizado.historialId?.toString() || null,
-      usuario: {
-        ...grupoActualizado.usuario,
-        id: grupoActualizado.usuario.id.toString()
-      },
-      historial: grupoActualizado.historial ? {
-        ...grupoActualizado.historial,
-        id: grupoActualizado.historial.id.toString()
-      } : null,
-      dispositivos: grupoActualizado.dispositivos.map(d => ({
-        ...d,
-        id: d.id.toString(),
-        grupoId: d.grupoId?.toString()
-      }))
+      ...rolActualizado,
+      id: rolActualizado.id.toString(),
+      permisos: rolActualizado.permisos.map(p => p.id.toString())
     });
-
   } catch (error) {
-    console.error("Error PUT grupo:", error);
+    console.error("Error PUT:", error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -142,57 +80,34 @@ export async function PUT(
       );
     }
     
-    if (error instanceof Error && error.message.includes("P2025")) {
-      return NextResponse.json(
-        { error: "Recurso relacionado no encontrado" },
-        { status: 404 }
-      );
-    }
-    
     return NextResponse.json(
-      { error: "Error al actualizar el grupo" },
+      { error: "Error al actualizar rol" },
       { status: 500 }
     );
   }
 }
 
-// DELETE: Eliminar grupo
+// DELETE - Eliminar rol
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: idString } = await params;
-    const { id } = idParamSchema.parse({ id: idString });
+    const { id } = await params;
+    const rolId = BigInt(id);
 
-    await prisma.usuarioGrupo.delete({
-      where: { id: BigInt(id) }
+    await prisma.usuarioRol.delete({
+      where: { id: rolId }
     });
 
     return NextResponse.json(
-      { message: "Grupo eliminado correctamente" },
+      { mensaje: "Rol eliminado correctamente" },
       { status: 200 }
     );
-
   } catch (error) {
-    console.error("Error DELETE grupo:", error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      );
-    }
-    
-    if (error instanceof Error && error.message.includes("P2025")) {
-      return NextResponse.json(
-        { error: "Grupo no encontrado" },
-        { status: 404 }
-      );
-    }
-    
+    console.error("Error DELETE:", error);
     return NextResponse.json(
-      { error: "Error al eliminar el grupo" },
+      { error: "Error al eliminar rol" },
       { status: 500 }
     );
   }
