@@ -16,6 +16,7 @@ npm install prisma @prisma/client
 npm install decimal.js
 npm i zod
 
+npm install tailwindcss @tailwindcss/postcss postcss
 npm install gsap
 
 
