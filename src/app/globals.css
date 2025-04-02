@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -11,10 +11,14 @@
     --foreground: #ededed;
   }
 }
+/* Cambiamos el media query por una clase .dark */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
 
 body {
   color: var(--foreground);
   background: var(--background);
-  /* Si quieres que K2D sea la fuente por defecto */
   font-family: var(--font-urbanist), sans-serif;
 }
