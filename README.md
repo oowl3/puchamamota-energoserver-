@@ -35,3 +35,8 @@ npx prisma studio
 ```
 Generador de datos falsos
 [https://fakerjs.dev/](https://fakerjs.dev/) 
+
+
+```
+Comandos Utiles .Dev
+rafce 

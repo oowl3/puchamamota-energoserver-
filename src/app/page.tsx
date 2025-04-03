@@ -1,22 +1,29 @@
-//import ElementoEj from "./components/Prueba/Elemento";
 import { ThemeToggle } from "./components/ThemeToggle";
+import Header_home from "./components/elements/header/Header_home";
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-        <div>
-          <h1>Energoserver</h1>
-          <button className="bg-sky-400">Comenzar</button>
+    <div className="grid min-h-screen items-center justify-items-center font-[family-name:var(--font-geist-sans)]">
+      <Header_home/>
+      
+      {/* Contenido principal */}
+      <main className="w-full max-w-4xl mt-20 px-4 sm:px-0"> {/* Margen superior para el header fijo */}
+        <div className="space-y-8">
+          <section>
+            <p className="text-[var(--color-text)]">Contenido principal aquí...</p>
+          </section>
         </div>
-        <div>
-          <div><p></p></div>
-          <div></div>
-          <div></div>
-        </div>
-        <footer>
-          <h6>Email:</h6>
-          <p>support@energoserver.mx</p>
+
+        {/* Footer */}
+        <footer className="mt-16 border-t border-[var(--color-v-6)] pt-8">
+          <h6 className="text-sm font-semibold text-[var(--color-v-1)]">Email:</h6>
+          <p className="mt-2 text-[var(--color-text)]">support@energoserver.mx</p>
         </footer>
-        <div><ThemeToggle/></div>
+      </main>
+
+      {/* Toggle de tema */}
+      <div className="fixed bottom-4 right-4">
+        <ThemeToggle />
+      </div>
     </div>
-  );
+  )
 }

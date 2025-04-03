@@ -19,7 +19,7 @@ const urbanist = Urbanist({
 export const metadata: Metadata = {
   title: "Energoserver",
   description: "@Ojeda",
-};
+  };
 
 export default function RootLayout({
   children,
@@ -27,11 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="es"
-      className={`${k2d.variable} ${urbanist.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="es" className={`${k2d.variable} ${urbanist.variable}`} suppressHydrationWarning>
+      <head>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+      </head>
       <body className="antialiased">
         <Providers>{children}</Providers>
       </body>

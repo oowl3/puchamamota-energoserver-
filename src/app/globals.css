@@ -30,10 +30,11 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-k2d);
-    margin: 2rem 0 1rem;
+    margin: 0; /* Elimina los márgenes */
     font-weight: 700;
     line-height: 1.2;
   }
+
 }
 
 :root {
@@ -43,9 +44,9 @@
   --color-v-1: #546F01;
   --color-v-2: #A4BC00;
   --color-v-3: #A6D900;
-  --color-c-1: #82624A;
-  --color-c-2: #B2A69D;
-  --color-c-3: #E5D9CC;
+  --color-v-4: #82624A;
+  --color-v-5: #B2A69D;
+  --color-v-6: #E5D9CC;
   
   /* Tipografía */
   --font-urbanist: 'Urbanist', sans-serif;
@@ -55,7 +56,7 @@
 .dark {
   --color-bg: #050505;
   --color-text: #ffffff;
-  --color-primary: #ff1e00;
+  --color-v-2: #546F01;
 }
 
 @layer utilities {
