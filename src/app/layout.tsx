@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { K2D, Urbanist } from "next/font/google";
+import { Providers } from "./components/providers"; 
 import "./globals.css";
-import { Providers } from "./components/providers"; // Asegúrate de que la ruta sea correcta
 
-// Configurar K2D (fuente estática con múltiples pesos/estilos)
+
 const k2d = K2D({
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800"],
@@ -11,7 +11,6 @@ const k2d = K2D({
   variable: "--font-k2d",
 });
 
-// Configurar Urbanist (fuente variable)
 const urbanist = Urbanist({
   subsets: ["latin"],
   variable: "--font-urbanist",
@@ -31,7 +30,7 @@ export default function RootLayout({
     <html
       lang="es"
       className={`${k2d.variable} ${urbanist.variable}`}
-      suppressHydrationWarning // Necesario para evitar warnings de hidratación
+      suppressHydrationWarning
     >
       <body className="antialiased">
         <Providers>{children}</Providers>
