@@ -6,7 +6,7 @@ export default function Home() {
       <Header_home/>
       
       {/* Contenido principal */}
-      <main className="w-full max-w-4xl mt-20 px-4 sm:px-0"> {/* Margen superior para el header fijo */}
+      <main className="w-full max-w-4xl mt-20 px-4 sm:px-0"> 
         <div className="space-y-8">
           <section>
             <p className="text-[var(--color-text)]">Contenido principal aquí...</p>
