@@ -22,7 +22,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="toggle lex gap-2 items-center rounded-full">
+    <div className="lex gap-2 items-center rounded-full">
       <button
         onClick={() => setTheme("system")}
         className={`text-[var(--color-v-b)] ${theme === "system" ? "opacity-100" : "opacity-50"}`}

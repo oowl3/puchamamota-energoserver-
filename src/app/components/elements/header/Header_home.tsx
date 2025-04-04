@@ -1,34 +1,17 @@
 "use client";
-
-import React, { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import React from "react";
+import IconProp from "../../IconProp";
 
 const Header_home = () => {
-  const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-
-  if (!mounted) return null;
-
-  const isDark = theme === "dark" || resolvedTheme === "dark";
-
   return (
     <header className="fixed top-0 left-0 w-full bg-[var(--color-bg)] backdrop-blur-md shadow-lg z-50">
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
           <div className="relative h-8 w-8">
-            <img
-              src={isDark ? "/logo-b.svg" : "/logo-w.svg"}
-              alt="Logo"
-              className="h-full w-full transition-opacity duration-300"
-            />
+            <IconProp />
           </div>
 
-          <h3 className="font-bold uppercase tracking-wider font-k2d text-[var(--color-text)]">
+          <h3 className="font-bold uppercase tracking-wider font-k2d text-[var(--color-text)] ">
             ENERGOSERVER
           </h3>
         </div>
@@ -40,7 +23,7 @@ const Header_home = () => {
             color: "var(--color-text)",
           }}
         >
-          <span className="text-sm">Comenzar</span>
+          <h6 className="font-urbanist font-normal">Comenzar</h6>
         </button>
       </div>
     </header>

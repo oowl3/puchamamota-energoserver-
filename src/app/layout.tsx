@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { K2D, Urbanist } from "next/font/google";
 import { Providers } from "./components/providers"; 
+import Important from "./components/important";
 import "./globals.css";
 
 
@@ -33,6 +34,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <Providers>{children}</Providers>
+        <Important/>
       </body>
     </html>
   );

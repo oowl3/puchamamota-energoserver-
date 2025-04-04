@@ -5,38 +5,7 @@
 @import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
 
-/* Configuración tipográfica */
-@layer base {
-  html {
-    font-size: 25px;
-  }
-
-  body {
-    font-size: 1rem;
-    line-height: 1.5;
-  }
-
-  p {
-    font-size: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  h6 { font-size: 1.24rem; }
-  h5 { font-size: 1.56rem; }
-  h4 { font-size: 1.96rem; }
-  h3 { font-size: 2.4rem; }
-  h2 { font-size: 3rem; }
-  h1 { font-size: 3.8rem; }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-k2d);
-    margin: 0; /* Elimina los márgenes */
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-}
-
+/* Variables globales */
 :root {
   /* Colores */
   --color-bg: #FEFDF9;
@@ -49,12 +18,13 @@
   --color-v-4: #82624A;
   --color-v-5: #B2A69D;
   --color-v-6: #E5D9CC;
-  
-  /* Tipografía */
+
+  /* Tipografías */
   --font-urbanist: 'Urbanist', sans-serif;
   --font-k2d: 'K2D', sans-serif; 
 }
 
+/* Modo oscuro */
 .dark {
   --color-bg: #050505;
   --color-text: #ffffff;
@@ -66,30 +36,61 @@
   --color-v-4: #A4BC00;
 }
 
-@layer utilities {
-  .font-k2d {
-    font-family: var(--font-k2d);
+/* Base: tipografías, tamaños y fuentes */
+@layer base {
+  html {
+    font-size: 25px;
   }
-  
-  .font-urbanist {
-    font-family: var(--font-urbanist);
+
+  body {
+    font-size: 1rem;
+    line-height: 1.5;
+    font-family: var(--font-urbanist), sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+
+ 
+
+  h6 { font-size: 1.24rem; }
+  h5 { font-size: 1.56rem; }
+  h4 { font-size: 1.96rem; }
+  h3 { font-size: 2.4rem; }
+  h2 { font-size: 3rem; }
+  h1 { font-size: 3.8rem; }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-k2d), sans-serif;
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.2;
   }
 }
 
-body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-urbanist), sans-serif;
-  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
-}
-
+/* Responsividad */
 @media (max-width: 768px) {
   html {
     font-size: 20px;
   }
-  
+
   h1 { font-size: 2.8rem; }
   h2 { font-size: 2.2rem; }
   h3 { font-size: 1.8rem; }
   h4 { font-size: 1.5rem; }
+}
+
+/* Utilidades personalizadas */
+@layer utilities {
+  .font-k2d {
+    font-family: var(--font-k2d);
+  }
+
+  .font-urbanist {
+    font-family: var(--font-urbanist);
+  }
+
+  .alt-font {
+    font-family: var(--font-k2d);
+  }
 }
