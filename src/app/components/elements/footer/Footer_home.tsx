@@ -1,5 +1,7 @@
 import React from 'react'
 import IconProp from '../../IconProp'
+import Link from 'next/link';
+
 const Footer_home = () => {
   return (
     <div>
@@ -20,6 +22,9 @@ const Footer_home = () => {
                     <h6 className="text-sm font-urbanist text-[var(--color-text)]">Contacto:</h6>
                     <p className="mt-2 text-[var(--color-text)]">support@energoserver.mx</p>
                 </div>
+                <Link href="/faq" className="font-urbanist font-normal text-[var(--color-text)] hover:underline transition-colors duration-200">
+                    <u>Ayuda</u>
+                </Link>
             </div>
         </footer>
     </div>
