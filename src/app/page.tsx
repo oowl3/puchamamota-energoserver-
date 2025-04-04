@@ -5,9 +5,11 @@ export default function Home() {
     <div className="grid min-h-screen items-center justify-items-center font-[family-name:var(--font-geist-sans)]">
       <Header_home/>
       {/* Contenido principal */}
-      <main className="w-full max-w-4xl mt-20 px-4 sm:px-0"> 
-        <div className="tracking-[1em] space-y-3" >
-      <h1>Ahorro  Control</h1> <h2>&</h2> <h1>Practicidad</h1>
+      <main className="w-full max-w-4xl mt-20 px-4 sm:px-0 space-y-20"> 
+        <div className="tracking-[1em]">
+      <h1>Ahorro  Control</h1>
+       <h2 className="inline">&</h2> 
+       <h1 className="inline">Practicidad</h1>
         </div>
         
       <div className="space-y-4">
