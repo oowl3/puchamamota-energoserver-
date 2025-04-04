@@ -4,10 +4,13 @@ export default function Home() {
   return (
     <div className="grid min-h-screen items-center justify-items-center font-[family-name:var(--font-geist-sans)]">
       <Header_home/>
-      
       {/* Contenido principal */}
       <main className="w-full max-w-4xl mt-20 px-4 sm:px-0"> 
-      <div className="space-y-6">
+        <div className="tracking-[1em] space-y-3" >
+      <h1>Ahorro  Control</h1> <h2>&</h2> <h1>Practicidad</h1>
+        </div>
+        
+      <div className="space-y-4">
     <h3>¿Qué hace?</h3>
     <p className="text-sm">Mide y optimiza la energía en tiempo real. Controla tu consumo eléctrico con precisión.</p>
     <h3>¿Por qué lo necesito?</h3>
@@ -19,6 +22,8 @@ export default function Home() {
             color: "var(--color-text)",
           }}>Resuelve tus dudas aqui</a>
   </div>
+<br />
+<hr />
   <div className="mt-8 space-y-8" >
   <h3 className="text-center ">
     ¿Dónde puedo comprarlo?
@@ -57,11 +62,11 @@ export default function Home() {
     
     {/* Aquí (tu tienda propia) */}
     <a
-      href="#"
+      href="https://www.youtube.com/watch?v=V99CluoQNLg"
       className="flex flex-col items-center"
     >
       <img
-        src="/ruta/tu-logo.png"
+        src="/logo-b.svg"
         alt="Aquí"
         className="h-12 w-auto mb-2"
       />
