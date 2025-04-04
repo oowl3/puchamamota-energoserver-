@@ -3,10 +3,8 @@
 import { useTheme } from "next-themes";
 import React, { useEffect, useState } from "react";
 
-interface LogoProps {
+interface LogoProps extends Omit<React.ComponentPropsWithoutRef<"img">, "src"> {
   forceTheme?: "light" | "dark";
-  className?: string;
-  [key: string]: any;
 }
 
 const IconProp = ({ forceTheme, className = "", ...props }: LogoProps) => {
