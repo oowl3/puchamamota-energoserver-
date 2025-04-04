@@ -104,7 +104,7 @@ export default function Home() {
               className="flex flex-col items-center"
             >
               <div className="h-12 w-auto mb-2">
-                <IconProp className="p-1" />
+                <IconProp />
               </div>
             </a>
           </div>
