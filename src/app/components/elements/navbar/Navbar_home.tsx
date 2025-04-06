@@ -2,14 +2,14 @@ import React from 'react';
 
 const Navbar_home = () => {
   return (
-    <div className="hidden md:block fixed left-0 top-0 h-screen w-[200px] px-4 py-8 border-r-4 border-[var(--color-v-1)]">
+    <div className="hidden md:block fixed left-0 top-0 h-screen w-[5rem] px-2 py-8 border-r-2 border-[var(--color-v-1)]">
       <nav className="flex flex-col justify-between h-full items-center">
         {['Inicio', '¿Qué hace?', 'Utilidades', 'Comprar'].map((item, index) => (
           <div
             key={item}
-            className="flex flex-col items-center h-32 justify-center relative w-full group"
+            className="flex flex-col items-center h-32 justify-center relative group"
           >
-            <div className="h-[120px] w-[120px] flex items-center justify-center">
+            <div className="h-[5rem] w-[2.5rem] flex items-center justify-center">
               <h6 className="rotate-[-90deg] whitespace-nowrap transform text-base font-medium tracking-wider">
                 {item}
               </h6>

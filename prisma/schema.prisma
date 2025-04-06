@@ -46,9 +46,11 @@ model RolPermiso {
   usuarioRols UsuarioRol[] // Relación muchos-a-muchos
 }
 
-model Consejo {
+model informacion {
   id            BigInt @id @default(autoincrement())
-  informacion   String?
+  pregunta   String?
+  respuesta   String?
+  informacion String?
 }
 
 model ListaTarifa {

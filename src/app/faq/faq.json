@@ -1,0 +1,55 @@
+[
+    {
+      "question": "✨¿Cómo creo una cuenta en la plataforma?",
+      "answer": "Regístrate en menos de un minuto con tu correo electrónico y una contraseña. Una vez dentro, agrega tus sensores y empieza a optimizar tu consumo de energía. ¡Crea tu cuenta ahora!"
+    },
+    {
+      "question": "⚡¿Cómo se instala el sensor?",
+      "answer": "La instalación es sencilla: solo debes conectar el sensor entre el enchufe y el dispositivo que deseas monitorear. Luego, sigue las instrucciones en la plataforma para vincularlo a tu cuenta."
+    },
+    {
+      "question": "🕛¿Cada cuánto tiempo se actualizan los datos de consumo?",
+      "answer": "Los datos se actualizan en tiempo real o con una pequeña demora de segundos dependiendo de la conexión a internet."
+    },
+    {
+      "question": "🤔¿Puedo conectar más de un sensor a la misma cuenta?",
+      "answer": "Sí, puedes conectar varios sensores a tu cuenta sin problemas. Solo añádelos desde la plataforma siguiendo unos simples pasos, y empezarás a monitorear todos tus dispositivos en un solo lugar."
+    },
+    {
+      "question": "💡¿Puedo establecer alertas de consumo alto?",
+      "answer": "Sí, la plataforma permite configurar alertas personalizadas. Puedes recibir notificaciones cuando el consumo de un dispositivo supere un límite determinado, lo que te ayudará a controlar tu consumo eléctrico."
+    },
+    {
+      "question": "💸¿Puedo ver un historial de mi consumo energético?",
+      "answer": "Sí, la plataforma te permite visualizar un historial detallado del consumo energético de tus dispositivos. Puedes ver estadísticas por día, semana, mes o año para optimizar tu uso de energía."
+    },
+    {
+      "question": "🔋¿Cuánto tiempo dura la batería del sensor?",
+      "answer": "Los sensores están diseñados para durar largos períodos de tiempo con baterías eficientes. Sin embargo, la duración puede variar dependiendo del uso y la conectividad. La plataforma te notificará cuando sea necesario cambiar la batería."
+    },
+    {
+      "question": "🔒¿La plataforma es segura?",
+      "answer": "Sí, la plataforma emplea medidas de seguridad avanzadas para proteger tus datos. Usamos cifrado para mantener tu información a salvo y cumplir con las mejores prácticas de privacidad."
+    },
+    {
+      "question": "📖¿Qué datos almacena la plataforma sobre su consumo?",
+      "answer": "Tu privacidad es nuestra prioridad. Solo registramos los datos esenciales sobre el consumo de energía de tus dispositivos para ofrecerte un mejor análisis. No compartimos ni vendemos tu información a terceros."
+    },
+    {
+      "question": "📊¿Puedo generar reportes de mi consumo energético?",
+      "answer": "Sí, puedes generar reportes detallados sobre tu consumo energético. Estos reportes pueden ser útiles para analizar tus hábitos y mejorar la eficiencia energética en tu hogar o negocio."
+    },
+    {
+      "question": "⚙️¿Qué dispositivos son compatibles con la plataforma?",
+      "answer": "La plataforma es compatible con una amplia variedad de sensores de consumo eléctrico y dispositivos inteligentes. Consulta la lista de dispositivos compatibles en la sección de ayuda para saber más."
+    },
+    {
+      "question": "🛑¿Qué hago si mi sensor no se conecta?",
+      "answer": "Si tienes problemas para conectar el sensor, asegúrate de que esté correctamente conectado y que tu red Wi-Fi esté funcionando. Si el problema persiste, consulta la sección de soporte técnico o contacta con nuestro equipo de ayuda."
+    },
+    {
+      "question": "🛠️¿Es difícil de instalar o configurar?",
+      "answer": "La instalación y configuración son extremadamente simples. Solo necesitas conectar el sensor al dispositivo que deseas monitorear y seguir las instrucciones en la plataforma para sincronizarlo con tu cuenta. ¡Es rápido y fácil!"
+    }
+  ]
+  

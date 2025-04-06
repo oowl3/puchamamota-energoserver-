@@ -1,55 +1,100 @@
-import React from 'react';
+"use client"
+import React, { useState } from 'react';
 import Header_home from '@/app/components/elements/header/Header_home';
-
-const faqList = [
-  {
-    question: '¿Cómo se instala el sensor?',
-    answer:
-      'La instalación es sencilla: solo debes conectar el sensor entre el enchufe y el dispositivo que deseas monitorear. Luego, sigue las instrucciones en la plataforma para vincularlo a tu cuenta.',
-  },
-  {
-    question: '¿Cada cuánto tiempo se actualizan los datos de consumo?',
-    answer:
-      'Los datos se actualizan en tiempo real o con una pequeña demora de segundos dependiendo de la conexión a internet.',
-  },
-  {
-    question: '¿Puedo conectar más de un sensor a la misma cuenta?',
-    answer:
-      'Sí, puedes conectar varios sensores a tu cuenta sin problemas. Solo añádelos desde la plataforma siguiendo unos simples pasos, y empezarás a monitorear todos tus dispositivos en un solo lugar.',
-  },
-  {
-    question: '¿Qué datos almacena la plataforma sobre su consumo?',
-    answer:
-      'Tu privacidad es nuestra prioridad. Solo registramos los datos esenciales sobre el consumo de energía de tus dispositivos para ofrecerte un mejor análisis. No compartimos ni vendemos tu información a terceros.',
-  },
-  {
-    question: '¿Cómo creo una cuenta en la plataforma?',
-    answer:
-      'Regístrate en menos de un minuto con tu correo electrónico y una contraseña. Una vez dentro, agrega tus sensores y empieza a optimizar tu consumo de energía. ¡Crea tu cuenta ahora!',
-  },
-];
+import Footer_home from '../components/elements/footer/Footer_home';
+import { ThemeToggle } from '../components/ThemeToggle';
+import faqData from './faq.json'; // Importación corregida
 
 const Questions = () => {
-  return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <Header_home />
-      <h2 className="text-3xl font-bold mt-6 mb-4 text-center">Preguntas Frecuentes</h2>
-      <hr className="mb-6 border-gray-300" />
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Función de filtrado mejorada
+  const filteredFaqs = faqData.filter(({ question, answer }) => {
+    const searchString = `${question} ${answer}`.toLowerCase();
+    return searchString.includes(searchQuery.trim().toLowerCase());
+  });
 
-      <ul className="space-y-6">
-        {faqList.map((faq, index) => (
-          <li key={index}>
-            <h3 className="text-lg font-semibold text-[var(--color-text)]">{faq.question}</h3>
-            <p className="text-[var(--color-text)] mt-1">{faq.answer}</p>
-          </li>
-        ))}
-      </ul>
+  return (
+    <div className="pt-12 max-w-4xl mx-auto min-h-screen flex flex-col">
+      <Header_home />
+      
+      <main className="flex-grow px-4">
+        {/* Encabezado accesible */}
+        <h1 className="text-3xl mt-6 mb-4 font-urbanist font-medium">
+          Preguntas Frecuentes
+        </h1>
+
+        {/* Buscador accesible */}
+        <div className="mb-4 w-full max-w-[500px] relative">
+          <label htmlFor="searchInput" className="sr-only">
+            Buscar en preguntas frecuentes
+          </label>
+          <span className="material-icons text-[var(--color-v-1)] absolute left-3 top-1/2 -translate-y-1/2">
+            search
+          </span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Buscar en preguntas..."
+            className="w-full pl-10 p-3 rounded-lg border focus:outline-none transition-all"
+            style={{ borderColor: "var(--color-v-2)" }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-controls="faqList"
+          />
+        </div>
+
+        <hr className="mb-6 border-gray-300" />
+
+        {/* Lista de resultados */}
+        <ul 
+          id="faqList"
+          className="space-y-6 mb-8"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {filteredFaqs.map((faq, index) => (
+            <li
+              key={`faq-${index}-${faq.question.slice(0,5)}`}
+              className="rounded-sm p-4 hover:shadow-sm transition-shadow"
+              style={{
+                borderWidth: "0.1rem",
+                borderColor: "var(--color-v-2)",
+                backgroundColor: "var(--color-bg)"
+              }}
+            >
+              <article>
+                <h2 className="text-lg font-urbanist font-medium text-[var(--color-text)]">
+                  {faq.question}
+                </h2>
+                <div 
+                  className="w-full h-px my-2" 
+                  style={{ backgroundColor: 'var(--color-v-2)' }} 
+                  aria-hidden="true"
+                />
+                <p className="text-[var(--color-text)] mt-1">{faq.answer}</p>
+              </article>
+            </li>
+          ))}
+
+          {/* Estado vacío */}
+          {filteredFaqs.length === 0 && (
+            <li 
+              className="text-center py-6 text-gray-500 italic"
+              aria-live="assertive"
+            >
+              No se encontraron resultados para "{searchQuery}"
+            </li>
+          )}
+        </ul>
+      </main>
+
+      <div className="fixed bottom-4 right-4">
+        <ThemeToggle />
+      </div>
+      <Footer_home />
     </div>
   );
-};
-export const metadata = {
-  title: 'Preguntas Frecuentes | Smart Energy',
-  description: 'Resuelve tus dudas sobre la instalación, el monitoreo y la seguridad de nuestros sensores de consumo energético.',
 };
 
 export default Questions;
