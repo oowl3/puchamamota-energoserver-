@@ -19,12 +19,16 @@ const Footer_home = () => {
                 </div>
                 <div className="w-px h-10" style={{ backgroundColor: 'var(--color-v-4)' }}></div>
                 <div className="p-4">
-                    <h6 className="text-sm font-urbanist text-[var(--color-text)]">Contacto:</h6>
-                    <p className="mt-2 text-[var(--color-text)]">support@energoserver.mx</p>
+                    <h6 className='text-sm font-urbanist text-[var(--color-text)]'>Contacto:</h6>
+                    <p className='mt-2 text-[var(--color-text)]'>support@energoserver.mx</p>
                 </div>
-                <Link href="/faq" className="font-urbanist font-normal text-[var(--color-text)] hover:underline transition-colors duration-200">
-                    <u>Ayuda</u>
-                </Link>
+                <div className='w-px h-10' style={{ backgroundColor: 'var(--color-v-4)' }}></div>
+                <div className='p-4'>
+                    <h6 className='text-sm font-urbanist text-[var(--color-text)]'>Ayuda</h6>
+                    <Link href="/faq" className='hover:underline transition-colors duration-200'>
+                        <p className='mt-2'>Preguntas frecuentes</p>
+                    </Link>
+                </div>
             </div>
         </footer>
     </div>
