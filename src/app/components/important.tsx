@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 
-// Extiende la interfaz Window en el ámbito global
 declare global {
   interface Window {
       openSesame?: () => void;

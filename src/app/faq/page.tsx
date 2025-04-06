@@ -3,13 +3,12 @@ import React, { useState } from 'react';
 import Header_home from '@/app/components/elements/header/Header_home';
 import Footer_home from '../components/elements/footer/Footer_home';
 import { ThemeToggle } from '../components/ThemeToggle';
-import faqData from './faq.json'; // Importación corregida
+import faqData from './faq.json'; 
 import FollowCursor from '../components/elements/follows/Follow_basic';
 
 const Questions = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Función de filtrado mejorada
   const filteredFaqs = faqData.filter(({ question, answer }) => {
     const searchString = `${question} ${answer}`.toLowerCase();
     return searchString.includes(searchQuery.trim().toLowerCase());
@@ -20,12 +19,11 @@ const Questions = () => {
       <Header_home />
       <FollowCursor/> 
         <main className="flex-grow px-4">
-          {/* Encabezado accesible */}
           <h1 className="text-3xl mt-6 mb-4 font-urbanist font-medium">
             Preguntas Frecuentes
           </h1>
 
-          {/* Buscador accesible */}
+
           <div className="mb-4 w-full max-w-[500px] relative">
             <label htmlFor="searchInput" className="sr-only">
               Buscar en preguntas frecuentes

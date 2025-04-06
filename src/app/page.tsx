@@ -7,10 +7,8 @@ import Navbar_home from "./components/elements/navbar/Navbar_home";
 export default function Home() {
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">
-      {/* Navbar fijo para pantallas sm y mayores y menú móvil para pantallas pequeñas */}
       <Navbar_home />
 
-      {/* Contenedor principal con margen izquierdo para compensar el navbar en pantallas sm */}
       <main className="sm:ml-[200px] mt-20 px-4 sm:px-0 space-y-20 max-w-4xl">
         <Header_home />
 
