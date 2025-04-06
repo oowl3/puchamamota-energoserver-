@@ -1,23 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 function Dulson() {
-  const [idiomas, setIdiomas] = useState([]);
-  const [tarifas, setTarifas] = useState([]);
-  const [isClient, setIsClient] = useState(false);
+  // Datos estáticos
+  const idiomas = [
+    { id: 1, nombre: 'Español' },
+    { id: 2, nombre: 'English' },
+    { id: 3, nombre: 'Français' }
+  ];
 
-  useEffect(() => {
-    setIsClient(true);
-    fetch('/api/lista_idioma').then(res => res.json()).then(data => setIdiomas(data));
-    fetch('/api/lista_tarifa').then(res => res.json()).then(data => setTarifas(data));
-  }, []);
-
-  if (!isClient) return null;
+  const tarifas = [
+    { id: 1, nombre: 'Básica' },
+    { id: 2, nombre: 'Intermedia' },
+    { id: 3, nombre: 'Premium' }
+  ];
 
   return (
     <main className="sm:ml-[200px] mt-20 px-4 sm:px-8 w-full font-urbanist text-[var(--color-text)] min-h-screen">
-      {/* Barra lateral fija de los lados */}
       <div className="absolute inset-0 border-l-8 border-r-8 px-6 py-10 w-full" style={{ borderColor: "var(--color-v-4)" }}>
         <div className="relative z-10">
           <h1 className="text-4xl font-k2d tracking-widest mb-2" style={{ color: "var(--color-v-1)" }}>
@@ -57,8 +57,10 @@ function Dulson() {
                 <label className="block mb-1">Idioma Preferido</label>
                 <select className="form-input w-full">
                   <option>Seleccionar</option>
-                  {idiomas.map((idioma: any) => (
-                    <option key={idioma.id} value={idioma.id}>{idioma.nombre}</option>
+                  {idiomas.map((idioma) => (
+                    <option key={idioma.id} value={idioma.id}>
+                      {idioma.nombre}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -77,8 +79,10 @@ function Dulson() {
                 <label className="block mb-1">Tarifa:</label>
                 <select className="form-input w-full">
                   <option>Seleccionar</option>
-                  {tarifas.map((tarifa: any) => (
-                    <option key={tarifa.id} value={tarifa.id}>{tarifa.nombre}</option>
+                  {tarifas.map((tarifa) => (
+                    <option key={tarifa.id} value={tarifa.id}>
+                      {tarifa.nombre}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -97,7 +101,7 @@ function Dulson() {
                 </div>
               </div>
 
-              {/* Botón a la derecha */}
+              {/* Botón de Guardar */}
               <div className="flex justify-end">
                 <button
                   className="rounded-full w-32 h-32 text-xl font-semibold shadow-md transition duration-300 hover:opacity-80"
