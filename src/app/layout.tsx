@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { K2D, Urbanist } from "next/font/google";
-import { Providers } from "./components/providers"; 
-import Important from "./components/important";
+import { Providers } from "./components/Providers";
+import Important from "./components/Important";
 import "./globals.css";
 
 
