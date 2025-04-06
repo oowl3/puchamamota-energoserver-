@@ -82,7 +82,7 @@ const Questions = () => {
                 className="text-center py-6 text-gray-500 italic"
                 aria-live="assertive"
               >
-                No se encontraron resultados para "{searchQuery}"
+                No se encontraron resultados para &quot;{searchQuery}&quot;
               </li>
             )}
           </ul>
