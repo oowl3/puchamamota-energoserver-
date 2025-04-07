@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Header_loguin from '../components/elements/header/Header_loguin';
 
 function Dulson() {
   // Datos estáticos
@@ -20,9 +21,7 @@ function Dulson() {
     <main className="sm:ml-[200px] mt-20 px-4 sm:px-8 w-full font-urbanist text-[var(--color-text)] min-h-screen">
       <div className="absolute inset-0 border-l-8 border-r-8 px-6 py-10 w-full" style={{ borderColor: "var(--color-v-4)" }}>
         <div className="relative z-10">
-          <h1 className="text-4xl font-k2d tracking-widest mb-2" style={{ color: "var(--color-v-1)" }}>
-            E N E R G O S E R V E R
-          </h1>
+          <Header_loguin/>
           <p className="text-lg mb-10">Completa tu registro, llenando el siguiente formulario:</p>
 
           {/* Sección 1: Datos personales */}

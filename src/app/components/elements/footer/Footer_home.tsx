@@ -31,6 +31,9 @@ const Footer_home = () => {
                     <Link href="/dulson" className='hover:underline transition-colors duration-200'>
                         <p className='mt-2'>ñ</p>
                     </Link>
+                    <Link href="/dulson-2" className='hover:underline transition-colors duration-200'>
+                        <p className='mt-2'>X</p>
+                    </Link>
                 </div>
             </div>
         </footer>

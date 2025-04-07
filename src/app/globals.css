@@ -14,8 +14,11 @@
   --color-v-0: #546f01;
   --color-v-1: #546F01;
   --color-v-2: #A4BC00;
+  --color-v-2_1: #A4BC00;
   --color-v-3: #A6D900;
+  --color-v-3_1: #A6D900;
   --color-v-4: #82624A;
+  --color-v-4_1: #82624A;
   --color-v-5: #B2A69D;
   --color-v-6: #E5D9CC;
 
@@ -31,9 +34,12 @@
   --color-v-b: #FEFDF9;
   --color-v-0: #546F01;
   --color-v-2: #546F01;
+  --color-v-2_1: #A6D900;
+  --color-v-3_1: #A4BC00;
   --color-v-5: #546F01;
   --color-v-1: #A6D900;
   --color-v-4: #A4BC00;
+  --color-v-4_1: #546F01;
 }
 
 /* Base: tipografías, tamaños y fuentes */
