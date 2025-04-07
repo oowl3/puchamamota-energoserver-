@@ -18,17 +18,19 @@ function Dulson() {
   ];
 
   return (
-    <main className="sm:ml-[200px] mt-20 px-4 sm:px-8 w-full font-urbanist text-[var(--color-text)] min-h-screen">
+    <main className=" mt-20 px-4 sm:px-8 w-full font-urbanist text-[var(--color-text)] min-h-screen space-y-8">
       <div className="absolute inset-0 border-l-8 border-r-8 px-6 py-10 w-full" style={{ borderColor: "var(--color-v-4)" }}>
         <div className="relative z-10">
           <Header_loguin/>
-          <p className="text-lg mb-10">Completa tu registro, llenando el siguiente formulario:</p>
-
+          <section className="py-5">
+          <h4 className=" mb-10 ">Completa tu registro, llenando el siguiente formulario:</h4>
+          </section>
           {/* Sección 1: Datos personales */}
           <section className="mb-10 border-t border-b py-6">
             <h2 className="text-lg font-semibold mb-6">Datos personales:</h2>
+            <p className="text-lg mb-10">Completa tu registro, llenando el siguiente formulario:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-              <div>
+              <div >
                 <label className="block mb-1">Nombre(s)</label>
                 <input type="text" className="form-input w-full" placeholder="Nombre completo" />
               </div>
@@ -45,8 +47,8 @@ function Dulson() {
               </div>
               <div>
                 <label className="block mb-1">Género</label>
-                <select className="form-input w-full">
-                  <option>Seleccionar</option>
+                <select className="form-input w-full  ">
+                  <option >Seleccionar</option>
                   <option>Masculino</option>
                   <option>Femenino</option>
                   <option>Otro</option>
