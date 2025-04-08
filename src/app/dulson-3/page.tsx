@@ -14,11 +14,11 @@ export default function PageRecuadros() {
   const [groups, setGroups] = useState<Group[]>([
     {
       name: "Lavandería",
-      devices: ["Lavadora", "Secadora", "Boiler", "Computadora"],
+      devices: ["Lavadora", "Secadora", "Boiler", "Computadora, "],
     },
     {
       name: "Recamara",
-      devices: ["Refrigeracion", "Xbox One", "Plancha"],
+      devices: ["Refrigeracion", "Xbox One", "Plancha","Nintendo Switch 2","Cargador"],
     },
   ]);
 
@@ -41,14 +41,12 @@ export default function PageRecuadros() {
     setGroups(updatedGroups);
   };
 
-  
   const handleEditGroup = (index: number) => {
     setEditingIndex(index);
     const groupToEdit = groups[index];
     setEditedGroup({ name: groupToEdit.name, devices: [...groupToEdit.devices] });
   };
 
-  
   const handleSaveGroup = () => {
     if (editingIndex !== null) {
       const updatedGroups = [...groups];
@@ -59,7 +57,6 @@ export default function PageRecuadros() {
     }
   };
 
- 
   const handleCancelEdit = () => {
     setEditingIndex(null);
     setEditedGroup({ name: "", devices: [] });
@@ -67,14 +64,14 @@ export default function PageRecuadros() {
 
   return (
     <>
-      
       <Header_loguin />
       <FollowCursor />
       <ThemeToggle />
 
       <div className="w-full min-h-screen flex flex-col items-center justify-start py-10">
-        <h1 className="mb-8  font-urbanist text-3xl">Mis grupos</h1>
-
+        <h1 className="mb-8 font-urbanist text-3xl">Mis grupos</h1>
+        
+        
         <div className="flex flex-wrap gap-8 justify-center w-full px-4">
           {groups.map((group, idx) => (
             <div
@@ -86,7 +83,6 @@ export default function PageRecuadros() {
               }}
             >
               {editingIndex === idx ? (
-                // Modo edición del grupo
                 <>
                   <h6 className="font-bold mb-2" style={{ color: "var(--color-text)" }}>
                     Editar grupo
@@ -101,7 +97,6 @@ export default function PageRecuadros() {
                     placeholder="Nombre del grupo"
                   />
 
-                  {/* Lista de dispositivos editables */}
                   <div
                     className="w-full flex-1 rounded-lg border overflow-y-auto p-2 mb-4"
                     style={{
@@ -136,7 +131,6 @@ export default function PageRecuadros() {
                       </div>
                     ))}
 
-                    {/* Campo para agregar nuevo dispositivo */}
                     <div className="flex gap-2 mt-2">
                       <input
                         type="text"
@@ -162,7 +156,6 @@ export default function PageRecuadros() {
                     </div>
                   </div>
 
-                  {/* Botones para guardar o cancelar edición */}
                   <div className="flex justify-around">
                     <button
                       onClick={handleSaveGroup}
@@ -179,9 +172,11 @@ export default function PageRecuadros() {
                   </div>
                 </>
               ) : (
-                // Modo visualización normal
                 <>
-                  <h6 className="font-bold mb-2 text-center" style={{ color: "var(--color-text)" }}>
+                  <h6
+                    className="font-bold mb-2 text-center"
+                    style={{ color: "var(--color-text)" }}
+                  >
                     Nombre del grupo
                   </h6>
                   <h2
@@ -191,7 +186,6 @@ export default function PageRecuadros() {
                     {group.name}
                   </h2>
 
-                  {/* Contenedor con scroll para dispositivos */}
                   <div
                     className="w-full flex-1 rounded-lg border overflow-y-auto p-2 mb-4"
                     style={{
@@ -207,7 +201,6 @@ export default function PageRecuadros() {
                     ))}
                   </div>
 
-                  {/* Íconos en columna para configurar (editar) y eliminar */}
                   <div className="w-full flex justify-around mt-auto">
                     <button
                       onClick={() => handleEditGroup(idx)}
@@ -244,23 +237,30 @@ export default function PageRecuadros() {
 
           {/* Botón para agregar nuevo grupo */}
           <div
-            className="w-20 h-20 flex items-center justify-center border shadow-sm rounded-full cursor-pointer hover:shadow-md transition self-center"
-            onClick={handleAddGroup}
+            className="w-64 h-80 p-6 flex items-center justify-center rounded-xl transition-shadow hover:shadow-md"
             style={{
-              backgroundColor: "var(--color-v-4_1)",
-              borderColor: "var(--color-v-4_1)",
-              color: "white",
+              border: "1px solid var(--color-v-2)",
+              backgroundColor: "var(--color-bg)",
             }}
           >
-            <span className="text-3xl">+</span>
+            <div
+              className="w-20 h-20 flex items-center justify-center border shadow-sm rounded-full cursor-pointer hover:shadow-md transition"
+              onClick={handleAddGroup}
+              style={{
+                backgroundColor: "var(--color-v-4_1)",
+                borderColor: "var(--color-v-4_1)",
+                color: "white",
+              }}
+            >
+              <span className="text-3xl">+</span>
+            </div>
           </div>
         </div>
       </div>
-      <div className="mt-20  sm:px-0  max-w-4xl">
-      <Footer_home />
-
+      <div className="mt-20 sm:px-0 max-w-4xl">
+        <Footer_home />
       </div>
-      
+
       <div className="fixed bottom-4 right-4">
         <ThemeToggle />
       </div>
