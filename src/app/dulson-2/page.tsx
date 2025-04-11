@@ -2,13 +2,14 @@
 
 import React from 'react';
 import Header_loguin from '../components/elements/header/Header_loguin';
+import Header_menu from '../components/elements/header/Header_menu';
 
 const Dulson_2 = () => {
   return (
     <main className="sm:ml-[200px] mt-20 px-4 sm:px-8 w-full font-urbanist text-[var(--color-text)] min-h-screen">
       <div className="w-full px-4 py-6">
 
-        <Header_loguin />
+        <Header_menu />
 
         {/* Título y consumo promedio */}
         <section className="mb-10">

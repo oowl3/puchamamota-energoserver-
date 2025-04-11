@@ -1,9 +1,10 @@
 import React from 'react'
 import Header_loguin from "@/app/components/elements/header/Header_loguin";
+import Header_menu from '../components/elements/header/Header_menu';
 const Dulson_4 = () => {
   return (
     <main>
-      <Header_loguin />
+      <Header_menu />
 
 <section className="p-6">
   <h2 className="text-xl font-semibold text-gray-800 mb-2">Añadir Dispositivo</h2>

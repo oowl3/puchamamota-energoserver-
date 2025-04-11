@@ -5,6 +5,7 @@ import Footer_home from '../components/elements/footer/Footer_home';
 import { ThemeToggle } from '../components/ThemeToggle';
 import faqData from './faq.json'; 
 import FollowCursor from '../components/elements/follows/Follow_basic';
+import Header_menu from '../components/elements/header/Header_menu';
 
 const Questions = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,7 +17,7 @@ const Questions = () => {
 
   return (
     <div className="pt-12 max-w-4xl mx-auto min-h-screen flex flex-col">
-      <Header_home />
+      <Header_menu />
       <FollowCursor/> 
         <main className="flex-grow px-4">
           <h1 className="text-3xl mt-6 mb-4 font-urbanist font-medium">

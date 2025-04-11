@@ -4,6 +4,7 @@ import Header_loguin from "@/app/components/elements/header/Header_loguin";
 import Footer_home from "@/app/components/elements/footer/Footer_home";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import FollowCursor from "@/app/components/elements/follows/Follow_basic";
+import Header_menu from "../components/elements/header/Header_menu";
 
 interface Group {
   name: string;
@@ -64,7 +65,7 @@ export default function PageRecuadros() {
 
   return (
     <>
-      <Header_loguin />
+      <Header_menu />
       <FollowCursor />
       <ThemeToggle />
 
