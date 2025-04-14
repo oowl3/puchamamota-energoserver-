@@ -2,7 +2,6 @@
 import React from "react";
 import IconProp from "../../IconProp";
 import Link from "next/link";
-import Button_clasic from "../button/Button_clasic";
 
 const Header_loguin = () => {
   return (
@@ -19,12 +18,7 @@ const Header_loguin = () => {
         </Link>
 
         <Link href="/" className='block w-11 h-11 group'>
-        <Button_clasic>
-          <div className="flex flex-col items-center justify-center gap-[2px] w-full  text-white">
-            <span className="material-symbols-outlined text-[1.3rem] leading-none">person_apron</span>
-            <span className="text-[0.5rem] font-medium">Perfil</span>
-          </div>
-        </Button_clasic>
+
         </Link>
       </div>
     </header>
