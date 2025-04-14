@@ -1,5 +1,6 @@
 "use client";
 
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect, useState } from "react";
 
@@ -11,17 +12,24 @@ export function Providers({ children }: { children: ReactNode }) {
   }, []);
 
   if (!mounted) {
-    return <>{children}</>;
+    return null; // Mejor práctica para hidratación
   }
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
+    <SessionProvider
+      basePath="/api/auth" // Corrige la ruta base
+      refetchInterval={5 * 60} // 5 minutos
+      refetchOnWindowFocus={false} // Evita recargas innecesarias
     >
-      {children}
-    </ThemeProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+        storageKey="energoserver-theme" // Namespace único
+      >
+        {children}
+      </ThemeProvider>
+    </SessionProvider>
   );
 }

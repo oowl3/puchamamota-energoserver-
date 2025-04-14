@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
 }
 
 datasource db {
@@ -23,12 +24,6 @@ model ConfiguracionAlerta {
   consumo                 BigInt
   usuarioConfiguracionId  BigInt 
   usuarioConfiguracion    UsuarioConfiguracion @relation("ConfiguracionAlertaRelation", fields: [usuarioConfiguracionId], references: [id])
-}
-
-model ListaIdioma {
-  id              BigInt                 @id @default(autoincrement())
-  idioma          String
-  usuarioConfigs  UsuarioConfiguracion[] @relation("ListaIdiomaRelation")
 }
 
 model PlanDisponible {
@@ -60,16 +55,15 @@ model ListaTarifa {
 
 model Usuario {
   id              BigInt               @id @default(autoincrement())
+  email           String @unique
   nombre          String
-  apellido        String
-  edad            BigInt
-  genero          String
-  telefono        BigInt?
-  tokenId         BigInt?
+  apellido        String?
+  edad            BigInt?
+  genero          String?
+  telefono        String?
   configuracionId BigInt?
   rolId           BigInt?
   
-  token           UsuarioToken?        @relation("UsuarioTokenRelation", fields: [tokenId], references: [id])
   configuracion   UsuarioConfiguracion? @relation("UsuarioConfigRelation", fields: [configuracionId], references: [id])
   rol             UsuarioRol?          @relation("UsuarioRolRelation", fields: [rolId], references: [id])
   grupos          UsuarioGrupo[]       @relation("UsuarioGrupoRelation") // Cambiado a array
@@ -77,8 +71,6 @@ model Usuario {
 
 model UsuarioConfiguracion {
   id                    BigInt               @id @default(autoincrement())
-  foto                  String?
-  idiomaId              BigInt
   periodoFacturacion    BigInt
   consumoInicial        BigInt
   consumoAnterior       BigInt
@@ -87,7 +79,6 @@ model UsuarioConfiguracion {
   metodoPago            String
   planActualId          BigInt
   
-  listaIdioma       ListaIdioma          @relation("ListaIdiomaRelation", fields: [idiomaId], references: [id])
   listaTarifa       ListaTarifa          @relation("ListaTarifaRelation", fields: [tarifaId], references: [id])
   planDisponible    PlanDisponible       @relation("PlanDisponibleRelation", fields: [planActualId], references: [id])
   usuarios          Usuario[]            @relation("UsuarioConfigRelation")
@@ -99,12 +90,6 @@ model UsuarioRol {
   rol       String
   permisos  RolPermiso[] // Relación muchos-a-muchos
   usuarios  Usuario[]   @relation("UsuarioRolRelation")
-}
-
-model UsuarioToken {
-  id       BigInt     @id @default(autoincrement())
-  token    String
-  usuarios Usuario[]  @relation("UsuarioTokenRelation")
 }
 
 model UsuarioGrupo {

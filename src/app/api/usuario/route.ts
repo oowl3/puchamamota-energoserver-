@@ -4,14 +4,26 @@ import { z } from "zod";
 
 // Esquema de validación
 const usuarioSchema = z.object({
-  nombre: z.string().min(1, "El nombre es requerido"),
-  apellido: z.string().min(1, "El apellido es requerido"),
-  edad: z.string().regex(/^\d+$/, "La edad debe ser un número entero positivo").transform(s => BigInt(s)),
-  genero: z.string().min(1, "El género es requerido"),
-  telefono: z.string().regex(/^\d+$/, "El teléfono debe contener solo dígitos").optional().transform(s => s ? BigInt(s) : undefined),
-  tokenId: z.string().regex(/^\d+$/, "tokenId debe ser un número entero").optional().transform(s => s ? BigInt(s) : undefined),
-  configuracionId: z.string().regex(/^\d+$/, "configuracionId debe ser un número entero").optional().transform(s => s ? BigInt(s) : undefined),
-  rolId: z.string().regex(/^\d+$/, "rolId debe ser un número entero").optional().transform(s => s ? BigInt(s) : undefined),
+  nombre: z.string().min(1, "El nombre es obligatorio"),
+  email: z.string().email("Email inválido"),
+  apellido: z.string().nullish(),
+  edad: z.string()
+    .regex(/^\d+$/, "La edad debe ser un número entero positivo")
+    .transform(val => BigInt(val))
+    .optional()
+    .nullable(),
+  genero: z.string().nullish(),
+  telefono: z.string().nullish(),
+  configuracionId: z.string()
+    .regex(/^\d+$/, "ID de configuración inválido")
+    .transform(val => BigInt(val))
+    .optional()
+    .nullable(),
+  rolId: z.string()
+    .regex(/^\d+$/, "ID de rol inválido")
+    .transform(val => BigInt(val))
+    .optional()
+    .nullable()
 });
 
 // POST - Crear nuevo usuario
@@ -28,24 +40,16 @@ export async function POST(request: Request) {
     const responseData = {
       ...nuevoUsuario,
       id: nuevoUsuario.id.toString(),
-      edad: nuevoUsuario.edad.toString(),
-      telefono: nuevoUsuario.telefono?.toString(),
-      tokenId: nuevoUsuario.tokenId?.toString(),
-      configuracionId: nuevoUsuario.configuracionId?.toString(),
-      rolId: nuevoUsuario.rolId?.toString(),
+      edad: nuevoUsuario.edad?.toString() ?? null,
+      configuracionId: nuevoUsuario.configuracionId?.toString() ?? null,
+      rolId: nuevoUsuario.rolId?.toString() ?? null
     };
 
     return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
     console.error("Error en POST:", error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors.map(e => e.message) },
-        { status: 400 }
-      );
-    }
     return NextResponse.json(
-      { error: "Error interno del servidor" },
+      { error: "Error al crear el usuario" },
       { status: 500 }
     );
   }
@@ -57,21 +61,19 @@ export async function GET() {
     const usuarios = await prisma.usuario.findMany();
 
     // Convertir todos los BigInt a strings
-    const usuariosConvertidos = usuarios.map(usuario => ({
+    const usuariosConvertidos = usuarios.map((usuario) => ({
       ...usuario,
       id: usuario.id.toString(),
-      edad: usuario.edad.toString(),
-      telefono: usuario.telefono?.toString(),
-      tokenId: usuario.tokenId?.toString(),
-      configuracionId: usuario.configuracionId?.toString(),
-      rolId: usuario.rolId?.toString(),
+      edad: usuario.edad?.toString() ?? null,
+      configuracionId: usuario.configuracionId?.toString() ?? null,
+      rolId: usuario.rolId?.toString() ?? null
     }));
 
     return NextResponse.json(usuariosConvertidos);
   } catch (error) {
     console.error("Error en GET:", error);
     return NextResponse.json(
-      { error: "Error interno del servidor" },
+      { error: "Error al obtener los usuarios" },
       { status: 500 }
     );
   }

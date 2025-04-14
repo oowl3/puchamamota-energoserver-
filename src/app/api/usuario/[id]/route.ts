@@ -1,49 +1,52 @@
+// app/api/usuarios/[id]/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Cabeceras CORS
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
-
-// Esquema de validación para ID
-const idSchema = z.string().regex(/^\d+$/, "ID debe ser un número válido");
-
 // Esquema de validación para actualización
-const usuarioUpdateSchema = z.object({
-  nombre: z.string().min(1, "El nombre es requerido").optional(),
-  apellido: z.string().min(1, "El apellido es requerido").optional(),
-  edad: z.string().regex(/^\d+$/, "La edad debe ser un número entero positivo").transform(Number).optional(),
-  genero: z.string().min(1, "El género es requerido").optional(),
-  telefono: z.string().regex(/^\d+$/, "El teléfono debe contener solo dígitos").optional().transform(Number),
-  tokenId: z.string().regex(/^\d+$/, "tokenId debe ser un número entero").optional().transform(Number),
-  configuracionId: z.string().regex(/^\d+$/, "configuracionId debe ser un número entero").optional().transform(Number),
-  rolId: z.string().regex(/^\d+$/, "rolId debe ser un número entero").optional().transform(Number),
+const usuarioSchema = z.object({
+  nombre: z.string().min(1, "El nombre es obligatorio").optional(),
+  email: z.string().email("Email inválido").optional(),
+  apellido: z.string().nullish(),
+  edad: z.string()
+    .regex(/^\d+$/, "La edad debe ser un número entero positivo")
+    .transform(val => BigInt(val))
+    .optional()
+    .nullable(),
+  genero: z.string().nullish(),
+  telefono: z.string().nullish(),
+  configuracionId: z.string()
+    .regex(/^\d+$/, "ID de configuración inválido")
+    .transform(val => BigInt(val))
+    .optional()
+    .nullable(),
+  rolId: z.string()
+    .regex(/^\d+$/, "ID de rol inválido")
+    .transform(val => BigInt(val))
+    .optional()
+    .nullable()
 });
 
-// GET: Obtener usuario por ID
-export async function GET(
-  _: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// GET - Obtener usuario por ID
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const resolvedParams = await params;
+    const idParam = params.id;
     
-    // Validar ID con Zod
-    const validatedId = idSchema.parse(resolvedParams.id);
-    const id = BigInt(validatedId);
-
+    // Validar y convertir ID
+    const id = BigInt(idParam);
     const usuario = await prisma.usuario.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        configuracion: true,
+        rol: true,
+        grupos: true
+      }
     });
 
     if (!usuario) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
-        { status: 404, headers: corsHeaders }
+        { status: 404 }
       );
     }
 
@@ -51,137 +54,92 @@ export async function GET(
     const usuarioConvertido = {
       ...usuario,
       id: usuario.id.toString(),
-      edad: usuario.edad.toString(),
-      telefono: usuario.telefono?.toString(),
-      tokenId: usuario.tokenId?.toString(),
-      configuracionId: usuario.configuracionId?.toString(),
-      rolId: usuario.rolId?.toString(),
+      edad: usuario.edad?.toString() ?? null,
+      configuracionId: usuario.configuracionId?.toString() ?? null,
+      rolId: usuario.rolId?.toString() ?? null,
+      configuracion: usuario.configuracion ? {
+        ...usuario.configuracion,
+        id: usuario.configuracion.id.toString()
+      } : null,
+      rol: usuario.rol ? {
+        ...usuario.rol,
+        id: usuario.rol.id.toString()
+      } : null,
+      grupos: usuario.grupos.map(grupo => ({
+        ...grupo,
+        id: grupo.id.toString(),
+        usuarioId: grupo.usuarioId.toString()
+      }))
     };
 
-    return NextResponse.json(usuarioConvertido, { headers: corsHeaders });
-
+    return NextResponse.json(usuarioConvertido);
   } catch (error) {
-    console.error("Error en GET /api/usuarios/[id]:", error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors.map(e => e.message) },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-    
+    console.error("Error en GET:", error);
     return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500, headers: corsHeaders }
+      { error: "ID inválido o error al obtener el usuario" },
+      { status: 400 }
     );
   }
 }
 
-// PUT: Actualizar usuario por ID
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// PUT - Actualizar usuario
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const [resolvedParams, body] = await Promise.all([
-      params,
-      request.json()
-    ]);
-    
-    // Validar ID con Zod
-    const validatedId = idSchema.parse(resolvedParams.id);
-    const id = BigInt(validatedId);
-
-    // Validar cuerpo con Zod
-    const validatedData = usuarioUpdateSchema.parse(body);
-
-    // Verificar existencia del usuario
-    const usuarioExistente = await prisma.usuario.findUnique({ where: { id } });
-    if (!usuarioExistente) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404, headers: corsHeaders }
-      );
-    }
+    const idParam = params.id;
+    const id = BigInt(idParam);
+    const body = await request.json();
+    const validatedData = usuarioSchema.parse(body);
 
     const usuarioActualizado = await prisma.usuario.update({
       where: { id },
       data: validatedData
     });
 
-    // Convertir BigInt a string
     const responseData = {
       ...usuarioActualizado,
       id: usuarioActualizado.id.toString(),
-      edad: usuarioActualizado.edad.toString(),
-      telefono: usuarioActualizado.telefono?.toString(),
-      tokenId: usuarioActualizado.tokenId?.toString(),
-      configuracionId: usuarioActualizado.configuracionId?.toString(),
-      rolId: usuarioActualizado.rolId?.toString(),
+      edad: usuarioActualizado.edad?.toString() ?? null,
+      configuracionId: usuarioActualizado.configuracionId?.toString() ?? null,
+      rolId: usuarioActualizado.rolId?.toString() ?? null
     };
 
-    return NextResponse.json(responseData, { headers: corsHeaders });
-
+    return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Error en PUT /api/usuarios/[id]:", error);
+    console.error("Error en PUT:", error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors.map(e => e.message) },
-        { status: 400, headers: corsHeaders }
+        { errors: error.errors },
+        { status: 400 }
       );
     }
     
     return NextResponse.json(
-      { error: "Error al actualizar el usuario" },
-      { status: 500, headers: corsHeaders }
+      { error: "Usuario no encontrado o datos inválidos" },
+      { status: 404 }
     );
   }
 }
 
-// DELETE: Eliminar usuario por ID
-export async function DELETE(
-  _: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// DELETE - Eliminar usuario
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const resolvedParams = await params;
-    
-    // Validar ID con Zod
-    const validatedId = idSchema.parse(resolvedParams.id);
-    const id = BigInt(validatedId);
-
-    // Verificar existencia del usuario
-    const usuarioExistente = await prisma.usuario.findUnique({ where: { id } });
-    if (!usuarioExistente) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404, headers: corsHeaders }
-      );
-    }
+    const idParam = params.id;
+    const id = BigInt(idParam);
 
     await prisma.usuario.delete({
-      where: { id },
+      where: { id }
     });
 
     return NextResponse.json(
       { message: "Usuario eliminado correctamente" },
-      { status: 200, headers: corsHeaders }
+      { status: 200 }
     );
-
   } catch (error) {
-    console.error("Error en DELETE /api/usuarios/[id]:", error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors.map(e => e.message) },
-        { status: 400, headers: corsHeaders }
-      );
-    }
-    
+    console.error("Error en DELETE:", error);
     return NextResponse.json(
-      { error: "Error al eliminar el usuario" },
-      { status: 500, headers: corsHeaders }
+      { error: "Usuario no encontrado o no se pudo eliminar" },
+      { status: 404 }
     );
   }
 }

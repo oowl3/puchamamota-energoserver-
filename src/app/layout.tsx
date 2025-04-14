@@ -22,6 +22,16 @@ export const metadata: Metadata = {
   description: "@Ojeda",
   };
 
+declare global {
+  interface BigInt {
+    toJSON(): string;
+  }
+}
+
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,6 +41,7 @@ export default function RootLayout({
     <html lang="es" className={`${k2d.variable} ${urbanist.variable}`} suppressHydrationWarning>
       <head>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=person_apron" />
       </head>
       <body className="antialiased">
         <Providers>{children}</Providers>

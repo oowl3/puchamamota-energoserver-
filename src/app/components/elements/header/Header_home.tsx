@@ -18,7 +18,7 @@ const Header_home = () => {
         </Link>
         
         
-        <Link href="/home" className="cursor-pointer border-2 font-medium px-6 py-2 rounded-full transition-all duration-300 hover:bg-[var(--color-v-2)] hover:border-transparent inline-block"
+        <Link href="/start" className="cursor-pointer border-2 font-medium px-6 py-2 rounded-full transition-all duration-300 hover:bg-[var(--color-v-2)] hover:border-transparent inline-block"
         style={{borderColor: "var(--color-v-2)", color: "var(--color-text)",}}>
           <h6 className="font-urbanist font-normal">Comenzar</h6>
         </Link>

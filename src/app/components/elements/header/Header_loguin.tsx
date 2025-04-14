@@ -2,7 +2,7 @@
 import React from "react";
 import IconProp from "../../IconProp";
 import Link from "next/link";
-import Button_clasic from "../button/button_clasic";
+import Button_clasic from "../button/Button_clasic";
 
 const Header_loguin = () => {
   return (
@@ -17,14 +17,14 @@ const Header_loguin = () => {
             ENERGOSERVER
           </h3>
         </Link>
-        
+
         <Link href="/" className='block w-11 h-11 group'>
-          <Button_clasic>
-            <span className="material-icons text-white text-xl transition-all group-hover:translate-y-[-0.25rem]">person_apron</span>
-            <h6 className="font-urbanist font-normal text-white text-[0.5rem] absolute bottom-[-0.75rem] opacity-0 group-hover:opacity-100 transition-opacity">
-              perfil
-            </h6>
-          </Button_clasic>
+        <Button_clasic>
+          <div className="flex flex-col items-center justify-center gap-[2px] w-full  text-white">
+            <span className="material-symbols-outlined text-[1.3rem] leading-none">person_apron</span>
+            <span className="text-[0.5rem] font-medium">Perfil</span>
+          </div>
+        </Button_clasic>
         </Link>
       </div>
     </header>

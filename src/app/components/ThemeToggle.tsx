@@ -2,7 +2,6 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import "./elements.css";
 
 
 export function ThemeToggle() {

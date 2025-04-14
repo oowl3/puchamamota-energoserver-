@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación
+// Esquema de validación (foto e idiomaId eliminados)
 const usuarioConfigSchema = z.object({
-  foto: z.string().optional(),
-  idiomaId: z.string().regex(/^\d+$/, "ID de idioma inválido"),
   periodoFacturacion: z.string().regex(/^\d+$/, "Período inválido"),
   consumoInicial: z.string().regex(/^\d+$/, "Consumo inicial inválido"),
   consumoAnterior: z.string().regex(/^\d+$/, "Consumo anterior inválido"),
@@ -24,7 +22,6 @@ export async function POST(request: Request) {
     // Convertir strings a BigInt
     const data = {
       ...validatedData,
-      idiomaId: BigInt(validatedData.idiomaId),
       periodoFacturacion: BigInt(validatedData.periodoFacturacion),
       consumoInicial: BigInt(validatedData.consumoInicial),
       consumoAnterior: BigInt(validatedData.consumoAnterior),
@@ -41,7 +38,6 @@ export async function POST(request: Request) {
     const responseData = {
       ...nuevaConfig,
       id: nuevaConfig.id.toString(),
-      idiomaId: nuevaConfig.idiomaId.toString(),
       periodoFacturacion: nuevaConfig.periodoFacturacion.toString(),
       consumoInicial: nuevaConfig.consumoInicial.toString(),
       consumoAnterior: nuevaConfig.consumoAnterior.toString(),
@@ -53,14 +49,14 @@ export async function POST(request: Request) {
     return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
     console.error("Error en POST:", error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Datos inválidos", detalles: error.errors },
         { status: 400 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "Error al crear configuración" },
       { status: 500 }
@@ -73,11 +69,9 @@ export async function GET() {
   try {
     const configuraciones = await prisma.usuarioConfiguracion.findMany();
 
-    // Convertir todos los BigInt a strings
     const configsConvertidas = configuraciones.map((config) => ({
       ...config,
       id: config.id.toString(),
-      idiomaId: config.idiomaId.toString(),
       periodoFacturacion: config.periodoFacturacion.toString(),
       consumoInicial: config.consumoInicial.toString(),
       consumoAnterior: config.consumoAnterior.toString(),

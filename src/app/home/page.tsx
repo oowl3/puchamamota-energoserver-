@@ -1,24 +1,21 @@
-"use client"
-import React from 'react'
-import Header_loguin from '../components/elements/header/Header_loguin'
-import { ThemeToggle } from '../components/ThemeToggle'
 
-function Home() {
+import { getUserSession } from '@/lib/session'
+import { redirect } from 'next/navigation'
+
+export default async function Home() {
+  const user = await getUserSession() // Obtiene la sesión del servidor
+  
+  if (!user) {
+    redirect('/start') // Redirige si no está autenticado (aunque el middleware ya lo maneja)
+  }
+
   return (
-    <div className='min-h-screen font-[family-name:var(--font-geist-sans)]'>
-      <Header_loguin/>
-      <div>
-        <h1>Energoserver</h1>
-      </div>
-      <div>
-
-      </div>
-
-      <div className="fixed bottom-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="p-4">
+      <h1>Bienvenido, {user.name}</h1>
+      <p>Tu ID de usuario es: {user.id}</p>
+      
+      {/* Datos del usuario desde el servidor */}
+      <pre>{JSON.stringify(user, null, 2)}</pre>
     </div>
   )
 }
-
-export default Home
