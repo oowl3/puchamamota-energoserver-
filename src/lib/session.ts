@@ -1,4 +1,4 @@
-import { User, getServerSession } from 'next-auth'
+import { User, getServerSession, Session } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 
 declare module 'next-auth' {
@@ -12,7 +12,7 @@ declare module 'next-auth' {
   }
 }
 
-export const session = async ({ session, token }: { session: any; token: JWT }) => {
+export const session = async ({ session, token }: { session: Session; token: JWT }) => {
   if (session.user) {
     session.user.id = token.id as string;
   }
