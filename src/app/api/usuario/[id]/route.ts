@@ -1,5 +1,5 @@
 // app/api/usuarios/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
@@ -28,9 +28,12 @@ const usuarioSchema = z.object({
 });
 
 // GET - Obtener usuario por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: { [key: string]: string | string[] } }
+) {
   try {
-    const idParam = params.id;
+    const { id: idParam } = context.params as { id: string };
     
     // Validar y convertir ID
     const id = BigInt(idParam);
@@ -83,9 +86,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT - Actualizar usuario
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  context: { params: { [key: string]: string | string[] } }
+) {
   try {
-    const idParam = params.id;
+    const { id: idParam } = context.params as { id: string };
     const id = BigInt(idParam);
     const body = await request.json();
     const validatedData = usuarioSchema.parse(body);
@@ -122,9 +128,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE - Eliminar usuario
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { [key: string]: string | string[] } }
+) {
   try {
-    const idParam = params.id;
+    const { id: idParam } = context.params as { id: string };
     const id = BigInt(idParam);
 
     await prisma.usuario.delete({

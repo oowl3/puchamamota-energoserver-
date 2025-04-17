@@ -10,7 +10,7 @@ const Navbar_home = () => {
             className="flex flex-col items-center h-32 justify-center relative group"
           >
             <div className="h-[5rem] w-[2.5rem] flex items-center justify-center">
-              <h6 className="rotate-[-90deg] whitespace-nowrap transform text-base font-medium tracking-wider">
+              <h6 className="rotate-[-90deg] whitespace-nowrap transform text-base font-urbanist font-medium tracking-wider">
                 {item}
               </h6>
             </div>
