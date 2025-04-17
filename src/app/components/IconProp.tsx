@@ -2,8 +2,9 @@
 
 import { useTheme } from "next-themes";
 import React, { useEffect, useState } from "react";
+import Image, { ImageProps } from "next/image";
 
-interface LogoProps extends Omit<React.ComponentPropsWithoutRef<"img">, "src"> {
+interface LogoProps extends Omit<ImageProps, "src" | "alt"> {
   forceTheme?: "light" | "dark";
 }
 
@@ -21,7 +22,6 @@ const IconProp = ({ forceTheme, className = "", ...props }: LogoProps) => {
     ? forceTheme === "dark"
     : theme === "dark" || resolvedTheme === "dark";
 
-    
 //     ___      ___        ___        _____        ___     
 //    /  /\    /  /\      /  /\      /  /::\      /  /\    
 //   /  /::\  /  /:/     /  /:/_    /  /:/\:\    /  /::\   
@@ -34,15 +34,18 @@ const IconProp = ({ forceTheme, className = "", ...props }: LogoProps) => {
 //   \  \::/    \__\/    \  \::/      \__\/      \  \:\    
 //    \__\/               \__\/                   \__\/    
 
-
   return (
-    <img
-      src={isDark ? "/logo-b.svg" : "/logo-w.svg"}
-      alt="Logo"
-      className={`h-full w-full transition-opacity duration-300 ${className}`}
-      {...props}
-    />
+    <div className={`relative w-8 h-8 ${className} flex justify-center items-center`}>
+      <Image
+        src={isDark ? "/logo-b.svg" : "/logo-w.svg"}
+        alt="Logo"
+        fill
+        className="object-contain"
+        {...props}
+      />
+    </div>
   );
 };
+
 
 export default IconProp;

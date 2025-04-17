@@ -85,7 +85,7 @@ const Policies = () => {
                 
                 <div className="border border-[var(--color-v-0)] p-4 rounded-md mb-4">
                 <p className="font-medium">Correo electrónico: support@energoserver.mx</p>
-                <p>o a través del sitio web oficial: <a href="https://energoserver.mx" className="text-[var(--color-v-2_1)] hover:underline">https://energoserver.mx</a>, en la sección "Privacidad y Datos Personales".</p>
+                <p>o a través del sitio web oficial: <a href="https://energoserver.mx" className="text-[var(--color-v-2_1)] hover:underline">https://energoserver.mx</a>, en la sección &quot;Privacidad y Datos Personales&quot;.</p>
                 </div>
                 
                 <p className="mb-4">
