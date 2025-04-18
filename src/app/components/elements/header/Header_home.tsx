@@ -12,7 +12,7 @@ const Header_home = () => {
             <IconProp />
           </div>
 
-          <h3 className="font-bold uppercase tracking-wider font-k2d text-[var(--color-text)] ">
+          <h3 className="font-bold uppercase tracking-wider font-k2d text-[var(--color-text)]">
             ENERGOSERVER
           </h3>
         </Link>

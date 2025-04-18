@@ -10,6 +10,7 @@
   /* Colores */
   --color-bg: #FEFDF9;
   --color-text: #111111;
+  --color-bg-1: hsl(48, 71%, 96%);
   --color-v-b: #050505;
   --color-v-0: #546f01;
   --color-v-1: #546F01;
@@ -26,12 +27,15 @@
   /* Tipografías */
   --font-urbanist: 'Urbanist', sans-serif;
   --font-k2d: 'K2D', sans-serif; 
+  --font-anonymous: 'Anonymous Pro', monospace;
+
 }
 
 /* Modo oscuro */
 .dark {
   --color-bg: #050505;
   --color-text: #ffffff;
+  --color-bg-1: #050505;
   --color-v-b: #FEFDF9;
   --color-v-0: #546F01;
   --color-v-1_1: #111111;
@@ -100,5 +104,9 @@
 
   .alt-font {
     font-family: var(--font-k2d);
+  }
+
+  .font-anonymous {
+    font-family: var(--font-anonymous);
   }
 }
