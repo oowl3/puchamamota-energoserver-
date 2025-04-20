@@ -15,7 +15,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 npm install prisma @prisma/client
 npm install decimal.js
 npm i zod
-
+npm install tsx --save-dev
 
 # Cosas a instalar
 npm install tailwindcss @tailwindcss/postcss postcss
@@ -27,6 +27,7 @@ npm install gsap
 # Para prisma
 npx prisma generate
 npx prisma db push
+npx prisma db seed
 ```
 ## Faker en la BD
 ¿Como acceder a el menu de la BD?

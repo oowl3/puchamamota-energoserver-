@@ -1,8 +1,9 @@
+// app/api/usuarios/[id]/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación
+// Esquema de validación (mismo que el original)
 const usuarioSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   email: z.string().email("Email inválido"),
@@ -26,22 +27,13 @@ const usuarioSchema = z.object({
     .nullable()
 });
 
-// GET: Obtener usuario por ID
-export async function GET(request: Request) {
+// GET - Obtener usuario por ID
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    // Validar que el ID existe
-    if (!id) {
-      return NextResponse.json(
-        { error: "Se requiere el ID del usuario" },
-        { status: 400 }
-      );
-    }
-
+    const idBigInt = BigInt(params.id);
+    
     const usuario = await prisma.usuario.findUnique({
-      where: { id: BigInt(id) }
+      where: { id: idBigInt }
     });
 
     if (!usuario) {
@@ -62,37 +54,37 @@ export async function GET(request: Request) {
 
     return NextResponse.json(usuarioConvertido);
   } catch (error) {
-    console.error("Error GET usuario:", error);
+    console.error("Error en GET:", error);
     return NextResponse.json(
-      { error: "Error al obtener el usuario" },
-      { status: 500 }
+      { error: "ID inválido o error al obtener el usuario" },
+      { status: 400 }
     );
   }
 }
 
-// PUT: Actualizar usuario
-export async function PUT(request: Request) {
+// PUT - Actualizar usuario
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const idBigInt = BigInt(params.id);
+    const body = await request.json();
+    
+    // Validación con campos opcionales
+    const validatedData = usuarioSchema.partial().parse(body);
 
-    // Validar ID
-    if (!id) {
+    // Verificar que hay campos para actualizar
+    if (Object.keys(validatedData).length === 0) {
       return NextResponse.json(
-        { error: "Se requiere el ID del usuario" },
+        { error: "No se proporcionaron campos para actualizar" },
         { status: 400 }
       );
     }
 
-    const body = await request.json();
-    const validatedData = usuarioSchema.parse(body);
-
     const usuarioActualizado = await prisma.usuario.update({
-      where: { id: BigInt(id) },
+      where: { id: idBigInt },
       data: validatedData
     });
 
-    // Convertir BigInt a string
+    // Conversión de BigInt
     const responseData = {
       ...usuarioActualizado,
       id: usuarioActualizado.id.toString(),
@@ -103,36 +95,53 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Error PUT usuario:", error);
-    return error instanceof z.ZodError 
-      ? NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-      : NextResponse.json({ error: "Error al actualizar el usuario" }, { status: 500 });
-  }
-}
-
-// DELETE: Eliminar usuario
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    // Validar ID
-    if (!id) {
+    console.error("Error en PUT:", error);
+    
+    // Manejar error de usuario no encontrado
+    if (error instanceof Error && error.message.includes("Record to update not found")) {
       return NextResponse.json(
-        { error: "Se requiere el ID del usuario" },
-        { status: 400 }
+        { error: "Usuario no encontrado" },
+        { status: 404 }
       );
     }
 
-    await prisma.usuario.delete({
-      where: { id: BigInt(id) }
+    return NextResponse.json(
+      { error: "Error al actualizar el usuario" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Eliminar usuario
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const idBigInt = BigInt(params.id);
+    
+    const usuarioEliminado = await prisma.usuario.delete({
+      where: { id: idBigInt }
     });
 
-    return NextResponse.json(
-      { success: "Usuario eliminado correctamente" }
-    );
+    // Conversión de BigInt
+    const responseData = {
+      ...usuarioEliminado,
+      id: usuarioEliminado.id.toString(),
+      edad: usuarioEliminado.edad?.toString() ?? null,
+      configuracionId: usuarioEliminado.configuracionId?.toString() ?? null,
+      rolId: usuarioEliminado.rolId?.toString() ?? null
+    };
+
+    return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
-    console.error("Error DELETE usuario:", error);
+    console.error("Error en DELETE:", error);
+    
+    // Manejar error de usuario no encontrado
+    if (error instanceof Error && error.message.includes("Record to delete does not exist")) {
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Error al eliminar el usuario" },
       { status: 500 }
