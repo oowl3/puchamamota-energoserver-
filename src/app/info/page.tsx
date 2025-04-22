@@ -1,10 +1,10 @@
 import React from 'react';
-import Header_home from '../components/elements/header/Header_home';
+import Header_start from '../components/elements/header/Header_start';
 import { ThemeToggle } from '../components/ThemeToggle';
 const Policies = () => {
   return (
     <div className="min-h-screen">
-      <Header_home/>
+      <Header_start/>
       
         <div className="container mx-auto px-4 py-8 max-w-4xl text-[var(--color-text)] border-t-[3rem]">
             <h1 className="text-3xl font-urbanist font-normal text-center mb-8  ">AVISO DE PRIVACIDAD</h1>

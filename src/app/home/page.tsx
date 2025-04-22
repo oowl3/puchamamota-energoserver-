@@ -1,9 +1,9 @@
 import { getUserSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
-import Button_signout from '../components/elements/button/Button_signout'
 import { isUserDataIncomplete } from '@/lib/validateUserData'
-
-export default async function Home() {
+import Button_signout from './safe_components/ui/Button_signout'
+import Header_home from './safe_components/header/Header_home'
+export default async function HomePage() {
   const userSession = await getUserSession()
 
   if (!userSession) {
@@ -14,17 +14,15 @@ export default async function Home() {
     cache: 'no-store',
   })
   const userData = await res.json()
-
   const datosIncompletos = isUserDataIncomplete(userData)
 
   return (
-    <div className="p-4">
+    <div>
+      <Header_home />
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-2xl font-bold">Bienvenido, {userData.nombre || userSession.name}</h1>
-          <p className="text-gray-600">ID de usuario: {userData.id}</p>
         </div>
-        <Button_signout />
       </div>
 
       {datosIncompletos && (
@@ -36,6 +34,7 @@ export default async function Home() {
       <pre className="bg-gray-100 p-4 rounded-lg">
         {JSON.stringify(userData, null, 2)}
       </pre>
+      <Button_signout />
     </div>
   )
 }

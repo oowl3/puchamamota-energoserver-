@@ -1,5 +1,5 @@
 import { ThemeToggle } from "./components/ThemeToggle";
-import Header_home from "./components/elements/header/Header_home";
+import Header_start from "./components/elements/header/Header_start";
 import Footer_home from "./components/elements/footer/Footer_home";
 import IconProp from "./components/IconProp";
 import Navbar_home from "./components/elements/navbar/Navbar_home";
@@ -10,7 +10,7 @@ export default function Home() {
       <Navbar_home />
 
       <main className="sm:ml-[200px] mt-20 px-4 sm:px-0 space-y-20 max-w-4xl">
-        <Header_home />
+        <Header_start />
 
         <div>
           <div className="tracking-[1.2rem] leading-[4rem]">

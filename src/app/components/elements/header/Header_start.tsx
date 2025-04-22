@@ -3,7 +3,7 @@ import React from "react";
 import IconProp from "../../IconProp";
 import Link from "next/link";
 
-const Header_home = () => {
+const Header_start = () => {
   return (
     <header className="fixed top-0 left-0 w-full bg-[var(--color-bg)] backdrop-blur-md shadow-lg z-50">
       <div className="flex items-center justify-between px-4 py-2">
@@ -27,4 +27,4 @@ const Header_home = () => {
   );
 };
 
-export default Header_home;
+export default Header_start;
