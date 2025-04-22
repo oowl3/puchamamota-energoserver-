@@ -1,8 +1,7 @@
 import { getUserSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import { isUserDataIncomplete } from '@/lib/validateUserData'
-import Button_signout from './safe_components/ui/Button_signout'
-import Header_home from './safe_components/header/Header_home'
+
 export default async function HomePage() {
   const userSession = await getUserSession()
 
@@ -10,16 +9,13 @@ export default async function HomePage() {
     redirect('/start')
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/usuario/${userSession.id}`, {
-    cache: 'no-store',
-  })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/usuario/${userSession.id}`, { cache: 'no-store'})
   const userData = await res.json()
   const datosIncompletos = isUserDataIncomplete(userData)
 
   return (
-    <div>
-      <Header_home />
-      <div className="flex justify-between items-start mb-8">
+    <div className="pt-15">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold">Bienvenido, {userData.nombre || userSession.name}</h1>
         </div>
@@ -34,7 +30,6 @@ export default async function HomePage() {
       <pre className="bg-gray-100 p-4 rounded-lg">
         {JSON.stringify(userData, null, 2)}
       </pre>
-      <Button_signout />
     </div>
   )
 }

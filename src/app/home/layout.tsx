@@ -1,4 +1,5 @@
 import { ThemeToggle } from "../components/ThemeToggle"
+import Header_home from "./safe_components/header/Header_home"
 
 export default function HomeLayout({
     children,
@@ -6,7 +7,8 @@ export default function HomeLayout({
     children: React.ReactNode
   }) {
     return (
-      <div className="min-h-scree">
+      <div>
+        <Header_home />
         <main>
           {children}
         </main>

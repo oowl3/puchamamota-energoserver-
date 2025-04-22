@@ -16,16 +16,14 @@ export default function Home() {
           <div className="tracking-[1.2rem] leading-[4rem]">
             <h1 className="font-urbanist text-[5.68rem] font-normal">Ahorro Control</h1>
             <h1
-              className="inline font-urbanist text-[6rem] tracking-[1rem] font-normal"
-              style={{ color: "var(--color-v-1)" }}
-            >
+              className="inline font-urbanist text-[6rem] tracking-[1rem] font-normal text-[var(--color-v-1)]">
               &amp;
             </h1>
             <h1 className="inline font-urbanist text-[5.68rem] font-normal">Practicidad.</h1>
           </div>
           <div className="flex items-start">
             <div>
-              <h1 className="inline" style={{ color: "var(--color-v-1)" }}>
+              <h1 className="inline text-[var(--color-v-1)]">
                 Energoserver
               </h1>
               <h1 className="inline font-urbanist font-normal"> lo</h1>
@@ -41,10 +39,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div
-          className="w-full h-px"
-          style={{ backgroundColor: "var(--color-v-4)" }}
-        ></div>
+        <div className="w-full h-px bg-[var(--color-v-4)]" />
 
         <div className="space-y-4">
           <h3 className="font-urbanist font-normal">¿Qué hace?</h3>
@@ -60,12 +55,9 @@ export default function Home() {
           </p>
         </div>
 
-        <div
-          className="w-full h-px"
-          style={{ backgroundColor: "var(--color-v-4)" }}
-        ></div>
+        <div className="w-full h-px bg-[var(--color-v-4)]" />
 
-        <div className="mt-8 space-y-8" style={{ borderColor: "var(--color-v-4)" }}>
+        <div className="mt-8 space-y-8 border-b-[var(--color-v-4)]">
           <h3 className="text-center font-urbanist">¿Dónde puedo comprarlo?</h3>
           <div className="flex justify-center space-x-8">
             {/* Amazon */}
