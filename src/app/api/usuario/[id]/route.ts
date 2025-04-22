@@ -28,18 +28,9 @@ const usuarioSchema = z.object({
 });
 
 // GET - Obtener usuario por ID
-export async function GET(request: Request, { params }: { params: { [key: string]: string | string[] } }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id;
-    
-    // Verificar que el id es un string y no un array
-    if (Array.isArray(id) || typeof id !== "string") {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
-
     const idBigInt = BigInt(id);
     
     const usuario = await prisma.usuario.findUnique({
@@ -72,17 +63,9 @@ export async function GET(request: Request, { params }: { params: { [key: string
 }
 
 // PUT - Actualizar usuario
-export async function PUT(request: Request, { params }: { params: { [key: string]: string | string[] } }) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id;
-    
-    if (Array.isArray(id) || typeof id !== "string") {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
-
     const idBigInt = BigInt(id);
     const body = await request.json();
     
@@ -127,17 +110,9 @@ export async function PUT(request: Request, { params }: { params: { [key: string
 }
 
 // DELETE - Eliminar usuario
-export async function DELETE(request: Request, { params }: { params: { [key: string]: string | string[] } }) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id;
-    
-    if (Array.isArray(id) || typeof id !== "string") {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
-
     const idBigInt = BigInt(id);
     
     const usuarioEliminado = await prisma.usuario.delete({
