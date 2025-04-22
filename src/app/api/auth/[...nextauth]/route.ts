@@ -61,7 +61,7 @@ const authOptions: NextAuthOptions = {
                             }
                         });
 
-                        await tx.usuario.create({
+                        const nuevoUsuario = await tx.usuario.create({
                             data: {
                                 email: profile.email!,
                                 nombre,
@@ -69,12 +69,20 @@ const authOptions: NextAuthOptions = {
                                 edad: 0,
                                 genero: "desconocido",
                                 configuracionId: nuevaConfiguracion.id,
-                                rolId: rol!.id // Usamos el ! para asegurar que existe
+                                rolId: rol!.id
+                            }
+                        });
+
+                        // Crear grupo por defecto "CASA"
+                        await tx.usuarioGrupo.create({
+                            data: {
+                                nombre: "CASA",
+                                usuarioId: nuevoUsuario.id
                             }
                         });
                     });
                 } else {
-                    // Actualizar datos básicos del usuario existente
+                    // Actualizar usuario existente (sin modificar grupos)
                     await prisma.usuario.update({
                         where: { email: profile.email },
                         data: {

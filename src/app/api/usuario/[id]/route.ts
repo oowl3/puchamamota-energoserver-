@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación (mismo que el original)
+// Esquema de validación (sin cambios)
 const usuarioSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   email: z.string().email("Email inválido"),
@@ -28,9 +28,19 @@ const usuarioSchema = z.object({
 });
 
 // GET - Obtener usuario por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: { [key: string]: string | string[] } }) {
   try {
-    const idBigInt = BigInt(params.id);
+    const id = params.id;
+    
+    // Verificar que el id es un string y no un array
+    if (Array.isArray(id) || typeof id !== "string") {
+      return NextResponse.json(
+        { error: "ID inválido" },
+        { status: 400 }
+      );
+    }
+
+    const idBigInt = BigInt(id);
     
     const usuario = await prisma.usuario.findUnique({
       where: { id: idBigInt }
@@ -43,7 +53,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
       );
     }
 
-    // Convertir BigInt a string
     const usuarioConvertido = {
       ...usuario,
       id: usuario.id.toString(),
@@ -63,15 +72,22 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT - Actualizar usuario
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: { [key: string]: string | string[] } }) {
   try {
-    const idBigInt = BigInt(params.id);
+    const id = params.id;
+    
+    if (Array.isArray(id) || typeof id !== "string") {
+      return NextResponse.json(
+        { error: "ID inválido" },
+        { status: 400 }
+      );
+    }
+
+    const idBigInt = BigInt(id);
     const body = await request.json();
     
-    // Validación con campos opcionales
     const validatedData = usuarioSchema.partial().parse(body);
 
-    // Verificar que hay campos para actualizar
     if (Object.keys(validatedData).length === 0) {
       return NextResponse.json(
         { error: "No se proporcionaron campos para actualizar" },
@@ -84,7 +100,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       data: validatedData
     });
 
-    // Conversión de BigInt
     const responseData = {
       ...usuarioActualizado,
       id: usuarioActualizado.id.toString(),
@@ -97,7 +112,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   } catch (error) {
     console.error("Error en PUT:", error);
     
-    // Manejar error de usuario no encontrado
     if (error instanceof Error && error.message.includes("Record to update not found")) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
@@ -113,15 +127,23 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE - Eliminar usuario
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: { [key: string]: string | string[] } }) {
   try {
-    const idBigInt = BigInt(params.id);
+    const id = params.id;
+    
+    if (Array.isArray(id) || typeof id !== "string") {
+      return NextResponse.json(
+        { error: "ID inválido" },
+        { status: 400 }
+      );
+    }
+
+    const idBigInt = BigInt(id);
     
     const usuarioEliminado = await prisma.usuario.delete({
       where: { id: idBigInt }
     });
 
-    // Conversión de BigInt
     const responseData = {
       ...usuarioEliminado,
       id: usuarioEliminado.id.toString(),
@@ -134,7 +156,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   } catch (error) {
     console.error("Error en DELETE:", error);
     
-    // Manejar error de usuario no encontrado
     if (error instanceof Error && error.message.includes("Record to delete does not exist")) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
