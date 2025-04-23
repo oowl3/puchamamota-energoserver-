@@ -14,7 +14,7 @@ export default function Button_goole() {
 <button 
   className="
     w-full max-w-xs
-    bg-white hover:bg-[var(--color-v-6)]
+    bg-white hover:bg-[var(--color-v-6_1)]
     border border-gray-300
     rounded-[3px]
     shadow-sm

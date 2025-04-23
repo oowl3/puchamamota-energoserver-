@@ -58,20 +58,20 @@ const PerfilDropdown = () => {
       </button>
 
       {open && (
-      <div className="absolute top-full right-0 mt-2 w-44 bg-[var(--color-v-1)] shadow-xl rounded-lg overflow-hidden z-50 animate-fade-in text-center">
+      <div className="absolute top-full right-0 mt-2 w-44 bg-[var(--color-v-6)] shadow-xl rounded-lg overflow-hidden z-50 animate-fade-in text-center">
         <Link
           href="/home/profile"
           onClick={() => setOpen(false)}
-          className="block w-full px-4 py-2 text-sm hover:bg-gray-100"
+          className="block w-full px-4 py-2 text-sm hover:bg-[var(--color-v-5_1)]"
         >
           <p className="mx-auto">Ir al perfil</p>
         </Link>
 
-        <div className="border-t border-gray-200" />
+        <div className="border-t border-gray-300" />
 
         <button
           onClick={() => signOut({ callbackUrl: '/start' })}
-          className="block w-full text-sm px-4 py-2 hover:bg-gray-100 cursor-pointer"
+          className="block w-full text-sm px-4 py-2 hover:bg-[var(--color-v-5_1)] cursor-pointer"
         >
           <p className="mx-auto">Cerrar sesión</p>
         </button>
