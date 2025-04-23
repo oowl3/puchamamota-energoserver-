@@ -14,7 +14,7 @@ export default async function HomePage() {
   const datosIncompletos = isUserDataIncomplete(userData)
 
   return (
-    <div className="pt-15">
+    <div className="pt-18">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold">Bienvenido, {userData.nombre || userSession.name}</h1>

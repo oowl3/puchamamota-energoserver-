@@ -1,5 +1,5 @@
 // app/api/usuarios/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
@@ -27,10 +27,9 @@ const usuarioSchema = z.object({
 });
 
 // GET - Obtener usuario por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    const idBigInt = BigInt(id);
+    const idBigInt = BigInt(params.id);
     
     const usuario = await prisma.usuario.findUnique({
       where: { id: idBigInt }
@@ -62,10 +61,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT - Actualizar usuario
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    const idBigInt = BigInt(id);
+    const idBigInt = BigInt(params.id);
     
     const body = await request.json();
     const validatedData = usuarioSchema.partial().parse(body);
@@ -109,10 +107,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE - Eliminar usuario
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params;
-    const idBigInt = BigInt(id);
+    const idBigInt = BigInt(params.id);
     
     const usuarioEliminado = await prisma.usuario.delete({
       where: { id: idBigInt }
