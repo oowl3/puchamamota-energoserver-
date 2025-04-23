@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación (sin cambios)
 const usuarioSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   email: z.string().email("Email inválido"),
@@ -30,8 +29,7 @@ const usuarioSchema = z.object({
 // GET - Obtener usuario por ID
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    // Acceso asíncrono al parámetro
-    const { id } = await Promise.resolve(params);
+    const { id } = await params;
     const idBigInt = BigInt(id);
     
     const usuario = await prisma.usuario.findUnique({
@@ -66,8 +64,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 // PUT - Actualizar usuario
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    // Acceso asíncrono al parámetro
-    const { id } = await Promise.resolve(params);
+    const { id } = await params;
     const idBigInt = BigInt(id);
     
     const body = await request.json();
@@ -114,8 +111,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 // DELETE - Eliminar usuario
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    // Acceso asíncrono al parámetro
-    const { id } = await Promise.resolve(params);
+    const { id } = await params;
     const idBigInt = BigInt(id);
     
     const usuarioEliminado = await prisma.usuario.delete({
