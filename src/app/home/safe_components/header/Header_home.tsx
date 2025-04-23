@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { signOut } from 'next-auth/react'
 import IconProp from "../../../components/IconProp";
 import Link from "next/link";
-import Button_signout from "../ui/Button_signout";
 import Button_clasic from "../ui/button_clasic";
 
 const Header_home = () => {
