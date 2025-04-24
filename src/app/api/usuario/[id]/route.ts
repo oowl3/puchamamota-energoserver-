@@ -27,9 +27,13 @@ const usuarioSchema = z.object({
 });
 
 // GET - Obtener usuario por ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const idBigInt = BigInt(params.id);
+    const { id } = await params;
+    const idBigInt = BigInt(id);
     
     const usuario = await prisma.usuario.findUnique({
       where: { id: idBigInt }
@@ -61,9 +65,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT - Actualizar usuario
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const idBigInt = BigInt(params.id);
+    const { id } = await params;
+    const idBigInt = BigInt(id);
     
     const body = await request.json();
     const validatedData = usuarioSchema.partial().parse(body);
@@ -107,9 +115,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE - Eliminar usuario
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const idBigInt = BigInt(params.id);
+    const { id } = await params;
+    const idBigInt = BigInt(id);
     
     const usuarioEliminado = await prisma.usuario.delete({
       where: { id: idBigInt }
