@@ -50,7 +50,7 @@ model informacion {
 model ListaTarifa {
   id              BigInt                 @id @default(autoincrement())
   tarifa          String
-  usuarioConfigs  UsuarioConfiguracion[] @relation("ListaTarifaRelation")
+  usuarioListat  Usuario[] @relation("ListaTarifaRelation")
 }
 
 model Usuario {
@@ -61,25 +61,23 @@ model Usuario {
   edad            BigInt?
   genero          String?
   telefono        String?
+  tarifaId        BigInt
   configuracionId BigInt?
   rolId           BigInt?
   
   configuracion   UsuarioConfiguracion? @relation("UsuarioConfigRelation", fields: [configuracionId], references: [id])
   rol             UsuarioRol?          @relation("UsuarioRolRelation", fields: [rolId], references: [id])
-  grupos          UsuarioGrupo[]       @relation("UsuarioGrupoRelation") // Cambiado a array
+  grupos          UsuarioGrupo[]       @relation("UsuarioGrupoRelation")
+  listaTarifa       ListaTarifa          @relation("ListaTarifaRelation", fields: [tarifaId], references: [id])
 }
 
 model UsuarioConfiguracion {
   id                    BigInt               @id @default(autoincrement())
-  periodoFacturacion    BigInt
-  consumoInicial        BigInt
+  periodoFacturacion    String
   consumoAnterior       BigInt
   consumoActual         BigInt
-  tarifaId              BigInt
-  metodoPago            String
   planActualId          BigInt
   
-  listaTarifa       ListaTarifa          @relation("ListaTarifaRelation", fields: [tarifaId], references: [id])
   planDisponible    PlanDisponible       @relation("PlanDisponibleRelation", fields: [planActualId], references: [id])
   usuarios          Usuario[]            @relation("UsuarioConfigRelation")
   configuracionAlertas ConfiguracionAlerta[] @relation("ConfiguracionAlertaRelation")

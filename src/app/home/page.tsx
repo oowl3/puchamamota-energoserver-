@@ -24,6 +24,7 @@ export default async function HomePage() {
       {datosIncompletos && (
         <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-4">
           <p>🔔 Por favor, completa tu información personal para disfrutar de todas las funcionalidades.</p>
+          <h2>Completa tu registro, llenando el siguiente formulario</h2>
         </div>
       )}
 

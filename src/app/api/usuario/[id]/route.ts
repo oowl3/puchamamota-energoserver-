@@ -3,6 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
+// Esquema actualizado con tarifaId
 const usuarioSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   email: z.string().email("Email inválido"),
@@ -14,6 +15,9 @@ const usuarioSchema = z.object({
     .nullable(),
   genero: z.string().nullish(),
   telefono: z.string().nullish(),
+  tarifaId: z.string()  // Nuevo campo requerido
+    .regex(/^\d+$/, "ID de tarifa inválido")
+    .transform(val => BigInt(val)),
   configuracionId: z.string()
     .regex(/^\d+$/, "ID de configuración inválido")
     .transform(val => BigInt(val))
@@ -26,17 +30,33 @@ const usuarioSchema = z.object({
     .nullable()
 });
 
+// Función recursiva para convertir BigInt
+const convertirBigInt = (obj: any): any => {
+  if (typeof obj === 'bigint') return obj.toString();
+  if (obj instanceof Object) {
+    for (const key in obj) {
+      obj[key] = convertirBigInt(obj[key]);
+    }
+  }
+  return obj;
+};
+
 // GET - Obtener usuario por ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } } // Corregido: sin Promise
 ) {
   try {
-    const { id } = await params;
-    const idBigInt = BigInt(id);
+    const idBigInt = BigInt(params.id);
     
     const usuario = await prisma.usuario.findUnique({
-      where: { id: idBigInt }
+      where: { id: idBigInt },
+      include: {  // Incluir relaciones
+        configuracion: true,
+        rol: true,
+        grupos: true,
+        listaTarifa: true
+      }
     });
 
     if (!usuario) {
@@ -46,13 +66,8 @@ export async function GET(
       );
     }
 
-    const usuarioConvertido = {
-      ...usuario,
-      id: usuario.id.toString(),
-      edad: usuario.edad?.toString() ?? null,
-      configuracionId: usuario.configuracionId?.toString() ?? null,
-      rolId: usuario.rolId?.toString() ?? null
-    };
+    // Convertir todos los BigInt incluyendo relaciones
+    const usuarioConvertido = convertirBigInt(usuario);
 
     return NextResponse.json(usuarioConvertido);
   } catch (error) {
@@ -67,14 +82,13 @@ export async function GET(
 // PUT - Actualizar usuario
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } } // Corregido: sin Promise
 ) {
   try {
-    const { id } = await params;
-    const idBigInt = BigInt(id);
+    const idBigInt = BigInt(params.id);
     
     const body = await request.json();
-    const validatedData = usuarioSchema.partial().parse(body);
+    const validatedData = usuarioSchema.partial().parse(body); // Campos opcionales
 
     if (Object.keys(validatedData).length === 0) {
       return NextResponse.json(
@@ -85,16 +99,17 @@ export async function PUT(
 
     const usuarioActualizado = await prisma.usuario.update({
       where: { id: idBigInt },
-      data: validatedData
+      data: validatedData,
+      include: {  // Incluir relaciones actualizadas
+        configuracion: true,
+        rol: true,
+        grupos: true,
+        listaTarifa: true
+      }
     });
 
-    const responseData = {
-      ...usuarioActualizado,
-      id: usuarioActualizado.id.toString(),
-      edad: usuarioActualizado.edad?.toString() ?? null,
-      configuracionId: usuarioActualizado.configuracionId?.toString() ?? null,
-      rolId: usuarioActualizado.rolId?.toString() ?? null
-    };
+    // Convertir todos los BigInt
+    const responseData = convertirBigInt(usuarioActualizado);
 
     return NextResponse.json(responseData);
   } catch (error) {
@@ -117,23 +132,23 @@ export async function PUT(
 // DELETE - Eliminar usuario
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } } // Corregido: sin Promise
 ) {
   try {
-    const { id } = await params;
-    const idBigInt = BigInt(id);
+    const idBigInt = BigInt(params.id);
     
     const usuarioEliminado = await prisma.usuario.delete({
-      where: { id: idBigInt }
+      where: { id: idBigInt },
+      include: {  // Incluir relaciones para última respuesta
+        configuracion: true,
+        rol: true,
+        grupos: true,
+        listaTarifa: true
+      }
     });
 
-    const responseData = {
-      ...usuarioEliminado,
-      id: usuarioEliminado.id.toString(),
-      edad: usuarioEliminado.edad?.toString() ?? null,
-      configuracionId: usuarioEliminado.configuracionId?.toString() ?? null,
-      rolId: usuarioEliminado.rolId?.toString() ?? null
-    };
+    // Convertir todos los BigInt
+    const responseData = convertirBigInt(usuarioEliminado);
 
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {

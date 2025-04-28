@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación
+// Esquema de validación actualizado
 const usuarioSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   email: z.string().email("Email inválido"),
@@ -14,6 +14,9 @@ const usuarioSchema = z.object({
     .nullable(),
   genero: z.string().nullish(),
   telefono: z.string().nullish(),
+  tarifaId: z.string()  // Campo requerido
+    .regex(/^\d+$/, "ID de tarifa inválido")
+    .transform(val => BigInt(val)),
   configuracionId: z.string()
     .regex(/^\d+$/, "ID de configuración inválido")
     .transform(val => BigInt(val))
@@ -41,6 +44,7 @@ export async function POST(request: Request) {
       ...nuevoUsuario,
       id: nuevoUsuario.id.toString(),
       edad: nuevoUsuario.edad?.toString() ?? null,
+      tarifaId: nuevoUsuario.tarifaId.toString(), // Nuevo campo
       configuracionId: nuevoUsuario.configuracionId?.toString() ?? null,
       rolId: nuevoUsuario.rolId?.toString() ?? null
     };
@@ -55,18 +59,36 @@ export async function POST(request: Request) {
   }
 }
 
-// GET - Obtener todos los usuarios
+// GET - Obtener todos los usuarios con relaciones
 export async function GET() {
   try {
-    const usuarios = await prisma.usuario.findMany();
+    const usuarios = await prisma.usuario.findMany({
+      include: {
+        configuracion: true,
+        rol: true,
+        grupos: true,
+        listaTarifa: true
+      }
+    });
 
-    // Convertir todos los BigInt a strings
-    const usuariosConvertidos = usuarios.map((usuario) => ({
-      ...usuario,
-      id: usuario.id.toString(),
-      edad: usuario.edad?.toString() ?? null,
-      configuracionId: usuario.configuracionId?.toString() ?? null,
-      rolId: usuario.rolId?.toString() ?? null
+    // Función para convertir BigInt en objetos anidados
+    const convertirBigInt = (obj: any): any => {
+      if (typeof obj === 'bigint') return obj.toString();
+      if (obj instanceof Object) {
+        for (const key in obj) {
+          obj[key] = convertirBigInt(obj[key]);
+        }
+      }
+      return obj;
+    };
+
+    // Convertir todos los BigInt a strings incluyendo relaciones
+    const usuariosConvertidos = usuarios.map(usuario => ({
+      ...convertirBigInt(usuario),
+      configuracion: usuario.configuracion ? convertirBigInt(usuario.configuracion) : null,
+      rol: usuario.rol ? convertirBigInt(usuario.rol) : null,
+      grupos: usuario.grupos.map(convertirBigInt),
+      listaTarifa: convertirBigInt(usuario.listaTarifa)
     }));
 
     return NextResponse.json(usuariosConvertidos);

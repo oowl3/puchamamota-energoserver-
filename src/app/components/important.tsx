@@ -10,7 +10,7 @@ declare global {
 
 const Important = () => {
   useEffect(() => {
-      console.log("⚠️ No deberías estar aquí shu vayase");
+      console.log("⚠️ No deberías estar aquí. Orale shu vayase");
 
       const showSecret = () => {
         const style = "color: yellow; font-weight: bold;";

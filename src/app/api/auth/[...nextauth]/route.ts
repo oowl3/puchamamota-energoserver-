@@ -9,6 +9,16 @@ const prisma = new PrismaClient();
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 
+const convertirBigInt = (obj: any): any => {
+  if (typeof obj === 'bigint') return obj.toString();
+  if (obj?.constructor === Object) {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, val]) => [key, convertirBigInt(val)])
+    );
+  }
+  return obj;
+};
+
 const authOptions: NextAuthOptions = {
     session: {
         strategy: 'jwt'
@@ -28,36 +38,42 @@ const authOptions: NextAuthOptions = {
             try {
                 const [nombre, apellido = ""] = profile.name?.split(" ") || ["", ""];
                 
-                // 1. Buscar rol existente primero por rol
+                // 1. Configurar tarifa por defecto
+                let tarifaDefault = await prisma.listaTarifa.findFirst({
+                    where: { tarifa: "Sin tarifa" }
+                });
+
+                if (!tarifaDefault) {
+                    tarifaDefault = await prisma.listaTarifa.create({
+                        data: {
+                            tarifa: "Sin tarifa",
+                        }
+                    });
+                }
+
+                // 2. Configurar rol
                 let rol = await prisma.usuarioRol.findFirst({
                     where: { rol: "usuario_normal" }
                 });
 
-                // Si no existe, crearlo
                 if (!rol) {
                     rol = await prisma.usuarioRol.create({
                         data: { rol: "usuario_normal" }
                     });
                 }
 
-                // 2. Verificar si el usuario ya existe
                 const usuarioExistente = await prisma.usuario.findUnique({
-                    where: { email: profile.email },
-                    select: { id: true, configuracionId: true }
+                    where: { email: profile.email }
                 });
 
-                // 3. Transacción solo para nuevos usuarios
                 if (!usuarioExistente) {
                     await prisma.$transaction(async (tx) => {
                         const nuevaConfiguracion = await tx.usuarioConfiguracion.create({
                             data: {
-                                periodoFacturacion: 30,
-                                consumoInicial: 0,
-                                consumoAnterior: 0,
-                                consumoActual: 0,
-                                tarifaId: 1,
-                                metodoPago: "tarjeta",
-                                planActualId: 1,
+                                periodoFacturacion: "Enero-Febrero", // Ejemplo de valor
+                                consumoAnterior: BigInt(0),
+                                consumoActual: BigInt(0),
+                                planActualId: BigInt(1), // Asegurar que exista el plan
                             }
                         });
 
@@ -66,30 +82,18 @@ const authOptions: NextAuthOptions = {
                                 email: profile.email!,
                                 nombre,
                                 apellido,
-                                edad: 0,
-                                genero: "desconocido",
+                                tarifaId: tarifaDefault.id,
                                 configuracionId: nuevaConfiguracion.id,
                                 rolId: rol!.id
                             }
                         });
 
-                        // Crear grupo por defecto "CASA"
                         await tx.usuarioGrupo.create({
                             data: {
                                 nombre: "CASA",
                                 usuarioId: nuevoUsuario.id
                             }
                         });
-                    });
-                } else {
-                    // Actualizar usuario existente (sin modificar grupos)
-                    await prisma.usuario.update({
-                        where: { email: profile.email },
-                        data: {
-                            nombre,
-                            apellido,
-                            rolId: rol!.id
-                        }
                     });
                 }
 
@@ -105,9 +109,9 @@ const authOptions: NextAuthOptions = {
                     where: { email: token.email },
                     include: {
                         rol: true,
+                        listaTarifa: true,
                         configuracion: {
                             include: {
-                                listaTarifa: true,
                                 planDisponible: true
                             }
                         }
@@ -115,9 +119,10 @@ const authOptions: NextAuthOptions = {
                 });
                 
                 if (dbUser) {
-                    token.id = dbUser.id;
+                    token.id = dbUser.id.toString();
                     token.rol = dbUser.rol?.rol;
-                    token.configuracion = dbUser.configuracion;
+                    token.configuracion = convertirBigInt(dbUser.configuracion);
+                    token.tarifa = convertirBigInt(dbUser.listaTarifa);
                 }
             }
             return token;

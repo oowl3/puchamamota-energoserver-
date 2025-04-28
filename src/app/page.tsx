@@ -1,12 +1,14 @@
 import { ThemeToggle } from "./components/ThemeToggle";
 import Header_start from "./components/elements/header/Header_start";
-import Footer_home from "./components/elements/footer/Footer_home";
+import Footer_start from "./components/elements/footer/Footer_start";
 import IconProp from "./components/IconProp";
 import Navbar_home from "./components/elements/navbar/Navbar_home";
+import FollowCursorGSAP from "./components/elements/follows/Follow_basic";
 
 export default function Home() {
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">
+      <FollowCursorGSAP />
       <Navbar_home />
 
       <main className="sm:ml-[200px] mt-20 px-4 sm:px-0 space-y-20 max-w-4xl">
@@ -100,10 +102,9 @@ export default function Home() {
           </div>
         </div>
 
-        <Footer_home />
+        <Footer_start />
       </main>
 
-      {/* Botón para cambiar tema */}
       <div className="fixed bottom-4 right-4">
         <ThemeToggle />
       </div>

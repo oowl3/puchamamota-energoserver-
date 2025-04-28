@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import Header_start from '../components/elements/header/Header_start';
-import Footer_home from '../components/elements/footer/Footer_home';
+import Footer_start from '../components/elements/footer/Footer_start';
 import { ThemeToggle } from '../components/ThemeToggle';
 import faqData from './faq.json'; 
 import FollowCursor from '../components/elements/follows/Follow_basic';
@@ -15,7 +15,8 @@ const Questions = () => {
   });
 
   return (
-    <div className="pt-12 max-w-4xl mx-auto min-h-screen flex flex-col">
+    <div>
+      <div  className="pt-12 max-w-4xl mx-auto min-h-screen flex flex-col">
       <Header_start />
       <FollowCursor/> 
         <main className="flex-grow px-4">
@@ -91,8 +92,9 @@ const Questions = () => {
         <div className="fixed bottom-4 right-4">
           <ThemeToggle />
         </div>
-        <Footer_home />
+      </div>
 
+      <Footer_start />
     </div>
   );
 };

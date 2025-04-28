@@ -16,7 +16,7 @@ async function main() {
 
   // Insertar ListaTarifa
   await prisma.listaTarifa.createMany({
-    data: ['1', '1A', '1B', '1C', '1D', '1E', '1F'].map((tarifa) => ({
+    data: ['1', '1A', '1B', '1C', '1D', '1E', '1F','Sin tarifa'].map((tarifa) => ({
       tarifa,
     })),
   });

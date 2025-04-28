@@ -2,7 +2,7 @@ import React from 'react'
 import IconProp from '../../IconProp'
 import Link from 'next/link';
 
-const Footer_home = () => {
+const Footer_start = () => {
   return (
     <div>
         <footer className=" pt-8">
@@ -39,4 +39,4 @@ const Footer_home = () => {
   )
 }
 
-export default Footer_home
+export default Footer_start

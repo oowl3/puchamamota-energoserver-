@@ -1,6 +1,8 @@
 import React from 'react';
 import Header_start from '../components/elements/header/Header_start';
+import Footer_start from '../components/elements/footer/Footer_start';
 import { ThemeToggle } from '../components/ThemeToggle';
+
 const Policies = () => {
   return (
     <div className="min-h-screen">
@@ -158,6 +160,7 @@ const Policies = () => {
         <div className="fixed bottom-4 right-4">
             <ThemeToggle />
         </div>
+        <Footer_start />
     </div>
   );
 };
