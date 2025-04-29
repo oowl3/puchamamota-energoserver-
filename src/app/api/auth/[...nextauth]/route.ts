@@ -1,3 +1,4 @@
+// src/app/api/auth/[...nextauth]/route.ts
 import { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
@@ -9,14 +10,27 @@ const prisma = new PrismaClient();
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 
-const convertirBigInt = (obj: any): any => {
-  if (typeof obj === 'bigint') return obj.toString();
-  if (obj?.constructor === Object) {
-    return Object.fromEntries(
-      Object.entries(obj).map(([key, val]) => [key, convertirBigInt(val)])
-    );
+// Tipos para la conversión segura de BigInt
+type BigIntToString<T> = T extends bigint 
+? string
+: T extends object
+  ? { [K in keyof T]: BigIntToString<T[K]> }
+  : T;
+
+const convertirBigInt = <T>(obj: T): BigIntToString<T> => {
+if (typeof obj === 'bigint') return obj.toString() as BigIntToString<T>;
+
+if (obj && typeof obj === 'object') {
+  if (Array.isArray(obj)) {
+    return obj.map(convertirBigInt) as BigIntToString<T>;
   }
-  return obj;
+  
+  return Object.fromEntries(
+    Object.entries(obj).map(([key, val]) => [key, convertirBigInt(val)])
+  ) as BigIntToString<T>;
+}
+
+return obj as BigIntToString<T>;
 };
 
 const authOptions: NextAuthOptions = {
@@ -70,10 +84,10 @@ const authOptions: NextAuthOptions = {
                     await prisma.$transaction(async (tx) => {
                         const nuevaConfiguracion = await tx.usuarioConfiguracion.create({
                             data: {
-                                periodoFacturacion: "Enero-Febrero", // Ejemplo de valor
+                                periodoFacturacion: "Enero-Febrero",
                                 consumoAnterior: BigInt(0),
                                 consumoActual: BigInt(0),
-                                planActualId: BigInt(1), // Asegurar que exista el plan
+                                planActualId: BigInt(1),
                             }
                         });
 
