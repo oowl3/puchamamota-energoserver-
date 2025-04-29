@@ -12,7 +12,7 @@ const configSchema = z.object({
 });
 
 // GET Todas las configuraciones
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const configuraciones = await prisma.usuarioConfiguracion.findMany({
       include: {
