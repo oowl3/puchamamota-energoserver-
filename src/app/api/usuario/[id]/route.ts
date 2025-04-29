@@ -1,57 +1,28 @@
-// app/api/usuarios/[id]/route.ts
-import { NextResponse, NextRequest } from "next/server";
+// src/app/api/usuarios/[id]/route.ts
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema actualizado con tarifaId
 const usuarioSchema = z.object({
-  nombre: z.string().min(1, "El nombre es obligatorio"),
   email: z.string().email("Email inválido"),
-  apellido: z.string().nullish(),
-  edad: z.string()
-    .regex(/^\d+$/, "La edad debe ser un número entero positivo")
-    .transform(val => BigInt(val))
-    .optional()
-    .nullable(),
-  genero: z.string().nullish(),
-  telefono: z.string().nullish(),
-  tarifaId: z.string()  // Nuevo campo requerido
-    .regex(/^\d+$/, "ID de tarifa inválido")
-    .transform(val => BigInt(val)),
-  configuracionId: z.string()
-    .regex(/^\d+$/, "ID de configuración inválido")
-    .transform(val => BigInt(val))
-    .optional()
-    .nullable(),
-  rolId: z.string()
-    .regex(/^\d+$/, "ID de rol inválido")
-    .transform(val => BigInt(val))
-    .optional()
-    .nullable()
+  nombre: z.string().min(1, "El nombre es requerido"),
+  apellido: z.string().optional().nullable(),
+  edad: z.coerce.bigint().optional().nullable(),
+  genero: z.string().optional().nullable(),
+  telefono: z.string().optional().nullable(),
+  tarifaId: z.coerce.bigint(),
+  configuracionId: z.coerce.bigint().optional().nullable(),
+  rolId: z.coerce.bigint().optional().nullable()
 });
 
-// Función recursiva para convertir BigInt
-const convertirBigInt = (obj: any): any => {
-  if (typeof obj === 'bigint') return obj.toString();
-  if (obj instanceof Object) {
-    for (const key in obj) {
-      obj[key] = convertirBigInt(obj[key]);
-    }
-  }
-  return obj;
-};
-
-// GET - Obtener usuario por ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } } // Corregido: sin Promise
-) {
+// GET Usuario por ID
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const idBigInt = BigInt(params.id);
+    const id = BigInt(params.id);
     
     const usuario = await prisma.usuario.findUnique({
-      where: { id: idBigInt },
-      include: {  // Incluir relaciones
+      where: { id },
+      include: {
         configuracion: true,
         rol: true,
         grupos: true,
@@ -66,104 +37,97 @@ export async function GET(
       );
     }
 
-    // Convertir todos los BigInt incluyendo relaciones
-    const usuarioConvertido = convertirBigInt(usuario);
+    return NextResponse.json({
+      ...usuario,
+      id: usuario.id.toString(),
+      tarifaId: usuario.tarifaId.toString(),
+      configuracionId: usuario.configuracionId?.toString() ?? null,
+      rolId: usuario.rolId?.toString() ?? null,
+      edad: usuario.edad?.toString() ?? null,
+      configuracion: usuario.configuracion ? {
+        ...usuario.configuracion,
+        id: usuario.configuracion.id.toString()
+      } : null,
+      rol: usuario.rol ? {
+        ...usuario.rol,
+        id: usuario.rol.id.toString()
+      } : null,
+      grupos: usuario.grupos.map(g => ({
+        ...g,
+        id: g.id.toString()
+      })),
+      listaTarifa: {
+        ...usuario.listaTarifa,
+        id: usuario.listaTarifa.id.toString()
+      }
+    });
 
-    return NextResponse.json(usuarioConvertido);
   } catch (error) {
-    console.error("Error en GET:", error);
+    console.error("Error GET usuario por ID:", error);
     return NextResponse.json(
-      { error: "ID inválido o error al obtener el usuario" },
+      { error: "ID inválido o error en el servidor" },
       { status: 400 }
     );
   }
 }
 
-// PUT - Actualizar usuario
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } } // Corregido: sin Promise
-) {
+// PUT Actualizar usuario
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const idBigInt = BigInt(params.id);
-    
+    const id = BigInt(params.id);
     const body = await request.json();
-    const validatedData = usuarioSchema.partial().parse(body); // Campos opcionales
+    const validatedData = usuarioSchema.parse(body);
 
-    if (Object.keys(validatedData).length === 0) {
+    const usuarioActualizado = await prisma.usuario.update({
+      where: { id },
+      data: validatedData
+    });
+
+    return NextResponse.json({
+      ...usuarioActualizado,
+      id: usuarioActualizado.id.toString(),
+      tarifaId: usuarioActualizado.tarifaId.toString(),
+      configuracionId: usuarioActualizado.configuracionId?.toString() ?? null,
+      rolId: usuarioActualizado.rolId?.toString() ?? null,
+      edad: usuarioActualizado.edad?.toString() ?? null
+    });
+
+  } catch (error) {
+    console.error("Error PUT usuario:", error);
+    
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "No se proporcionaron campos para actualizar" },
+        { error: error.errors[0].message },
         { status: 400 }
       );
     }
-
-    const usuarioActualizado = await prisma.usuario.update({
-      where: { id: idBigInt },
-      data: validatedData,
-      include: {  // Incluir relaciones actualizadas
-        configuracion: true,
-        rol: true,
-        grupos: true,
-        listaTarifa: true
-      }
-    });
-
-    // Convertir todos los BigInt
-    const responseData = convertirBigInt(usuarioActualizado);
-
-    return NextResponse.json(responseData);
-  } catch (error) {
-    console.error("Error en PUT:", error);
     
-    if (error instanceof Error && error.message.includes("Record to update not found")) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(
-      { error: "Error al actualizar el usuario" },
-      { status: 500 }
+      { error: "Usuario no encontrado o datos inválidos" },
+      { status: 404 }
     );
   }
 }
 
-// DELETE - Eliminar usuario
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } } // Corregido: sin Promise
-) {
+// DELETE Eliminar usuario
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const idBigInt = BigInt(params.id);
+    const id = BigInt(params.id);
     
-    const usuarioEliminado = await prisma.usuario.delete({
-      where: { id: idBigInt },
-      include: {  // Incluir relaciones para última respuesta
-        configuracion: true,
-        rol: true,
-        grupos: true,
-        listaTarifa: true
-      }
+    await prisma.usuario.delete({
+      where: { id }
     });
 
-    // Convertir todos los BigInt
-    const responseData = convertirBigInt(usuarioEliminado);
-
-    return NextResponse.json(responseData, { status: 200 });
-  } catch (error) {
-    console.error("Error en DELETE:", error);
-    
-    if (error instanceof Error && error.message.includes("Record to delete does not exist")) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(
-      { error: "Error al eliminar el usuario" },
-      { status: 500 }
+      { message: "Usuario eliminado correctamente" },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("Error DELETE usuario:", error);
+    return NextResponse.json(
+      { error: "Usuario no encontrado o ID inválido" },
+      { status: 404 }
     );
   }
 }
