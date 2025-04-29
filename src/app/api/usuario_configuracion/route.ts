@@ -1,90 +1,107 @@
+// src/app/api/configuraciones/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import type { NextRequest } from "next/server";
 
-// Esquema de validación (foto e idiomaId eliminados)
-const usuarioConfigSchema = z.object({
-  periodoFacturacion: z.string().regex(/^\d+$/, "Período inválido"),
-  consumoInicial: z.string().regex(/^\d+$/, "Consumo inicial inválido"),
-  consumoAnterior: z.string().regex(/^\d+$/, "Consumo anterior inválido"),
-  consumoActual: z.string().regex(/^\d+$/, "Consumo actual inválido"),
-  tarifaId: z.string().regex(/^\d+$/, "ID de tarifa inválido"),
-  metodoPago: z.string().min(2, "Método de pago inválido"),
-  planActualId: z.string().regex(/^\d+$/, "ID de plan inválido")
+const configSchema = z.object({
+  periodoFacturacion: z.string().min(1, "Periodo de facturación requerido"),
+  consumoAnterior: z.coerce.bigint().nonnegative("Consumo anterior inválido"),
+  consumoActual: z.coerce.bigint().nonnegative("Consumo actual inválido"),
+  planActualId: z.coerce.bigint({ required_error: "Plan actual requerido" })
 });
 
-// POST - Crear nueva configuración
-export async function POST(request: Request) {
+// GET Todas las configuraciones
+export async function GET(request: NextRequest) {
   try {
-    const body = await request.json();
-    const validatedData = usuarioConfigSchema.parse(body);
-
-    // Convertir strings a BigInt
-    const data = {
-      ...validatedData,
-      periodoFacturacion: BigInt(validatedData.periodoFacturacion),
-      consumoInicial: BigInt(validatedData.consumoInicial),
-      consumoAnterior: BigInt(validatedData.consumoAnterior),
-      consumoActual: BigInt(validatedData.consumoActual),
-      tarifaId: BigInt(validatedData.tarifaId),
-      planActualId: BigInt(validatedData.planActualId)
-    };
-
-    const nuevaConfig = await prisma.usuarioConfiguracion.create({
-      data
+    const configuraciones = await prisma.usuarioConfiguracion.findMany({
+      include: {
+        planDisponible: true,
+        usuarios: true,
+        configuracionAlertas: true
+      },
+      orderBy: { id: "desc" }
     });
 
-    // Convertir BigInt a strings para la respuesta
-    const responseData = {
-      ...nuevaConfig,
-      id: nuevaConfig.id.toString(),
-      periodoFacturacion: nuevaConfig.periodoFacturacion.toString(),
-      consumoInicial: nuevaConfig.consumoInicial.toString(),
-      consumoAnterior: nuevaConfig.consumoAnterior.toString(),
-      consumoActual: nuevaConfig.consumoActual.toString(),
-      tarifaId: nuevaConfig.tarifaId.toString(),
-      planActualId: nuevaConfig.planActualId.toString()
-    };
+    return NextResponse.json(configuraciones.map(config => ({
+      ...config,
+      id: config.id.toString(),
+      consumoAnterior: config.consumoAnterior.toString(),
+      consumoActual: config.consumoActual.toString(),
+      planActualId: config.planActualId.toString(),
+      planDisponible: {
+        ...config.planDisponible,
+        id: config.planDisponible.id.toString()
+      },
+      usuarios: config.usuarios.map(u => ({
+        ...u,
+        id: u.id.toString(),
+        tarifaId: u.tarifaId.toString()
+      })),
+      configuracionAlertas: config.configuracionAlertas.map(ca => ({
+        ...ca,
+        id: ca.id.toString(),
+        usuarioConfiguracionId: ca.usuarioConfiguracionId.toString()
+      }))
+    })));
 
-    return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
-    console.error("Error en POST:", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Datos inválidos", detalles: error.errors },
-        { status: 400 }
-      );
-    }
-
+    console.error("Error GET configuraciones:", error);
     return NextResponse.json(
-      { error: "Error al crear configuración" },
+      { error: "Error obteniendo configuraciones" },
       { status: 500 }
     );
   }
 }
 
-// GET - Obtener todas las configuraciones
-export async function GET() {
+// POST Crear nueva configuración
+export async function POST(request: NextRequest) {
   try {
-    const configuraciones = await prisma.usuarioConfiguracion.findMany();
+    const body = await request.json();
+    const validatedData = configSchema.parse(body);
 
-    const configsConvertidas = configuraciones.map((config) => ({
-      ...config,
-      id: config.id.toString(),
-      periodoFacturacion: config.periodoFacturacion.toString(),
-      consumoInicial: config.consumoInicial.toString(),
-      consumoAnterior: config.consumoAnterior.toString(),
-      consumoActual: config.consumoActual.toString(),
-      tarifaId: config.tarifaId.toString(),
-      planActualId: config.planActualId.toString()
-    }));
+    const nuevaConfig = await prisma.usuarioConfiguracion.create({
+      data: {
+        ...validatedData,
+        configuracionAlertas: {
+          create: [] // Creación de alertas vacías por defecto
+        }
+      },
+      include: {
+        planDisponible: true,
+        configuracionAlertas: true
+      }
+    });
 
-    return NextResponse.json(configsConvertidas);
+    return NextResponse.json({
+      ...nuevaConfig,
+      id: nuevaConfig.id.toString(),
+      consumoAnterior: nuevaConfig.consumoAnterior.toString(),
+      consumoActual: nuevaConfig.consumoActual.toString(),
+      planActualId: nuevaConfig.planActualId.toString(),
+      planDisponible: {
+        ...nuevaConfig.planDisponible,
+        id: nuevaConfig.planDisponible.id.toString()
+      },
+      configuracionAlertas: nuevaConfig.configuracionAlertas.map(ca => ({
+        ...ca,
+        id: ca.id.toString(),
+        usuarioConfiguracionId: ca.usuarioConfiguracionId.toString()
+      }))
+    }, { status: 201 });
+
   } catch (error) {
-    console.error("Error en GET:", error);
+    console.error("Error POST configuración:", error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors.map(e => e.message) },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Error al obtener configuraciones" },
+      { error: "Error interno del servidor" },
       { status: 500 }
     );
   }
