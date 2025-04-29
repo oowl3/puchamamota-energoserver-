@@ -2,12 +2,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import type { NextRequest } from "next/server";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const usuarioSchema = z.object({
   email: z.string().email("Email inválido"),
   nombre: z.string().min(1, "El nombre es requerido"),
   apellido: z.string().optional().nullable(),
-  edad: z.coerce.bigint().optional().nullable(),
+  edad: z.coerce.number().int().positive().optional().nullable(),
   genero: z.string().optional().nullable(),
   telefono: z.string().optional().nullable(),
   tarifaId: z.coerce.bigint(),
@@ -16,9 +18,13 @@ const usuarioSchema = z.object({
 });
 
 // GET Usuario por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = BigInt(params.id);
+    const { id: idString } = await params;
+    const id = BigInt(idString);
     
     const usuario = await prisma.usuario.findUnique({
       where: { id },
@@ -72,9 +78,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT Actualizar usuario
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = BigInt(params.id);
+    const { id: idString } = await params;
+    const id = BigInt(idString);
     const body = await request.json();
     const validatedData = usuarioSchema.parse(body);
 
@@ -102,17 +112,30 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       );
     }
     
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return NextResponse.json(
+          { error: "Usuario no encontrado" },
+          { status: 404 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: "Usuario no encontrado o datos inválidos" },
-      { status: 404 }
+      { error: "Error interno del servidor" },
+      { status: 500 }
     );
   }
 }
 
 // DELETE Eliminar usuario
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = BigInt(params.id);
+    const { id: idString } = await params;
+    const id = BigInt(idString);
     
     await prisma.usuario.delete({
       where: { id }
@@ -125,9 +148,17 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
   } catch (error) {
     console.error("Error DELETE usuario:", error);
+    
+    if (error instanceof PrismaClientKnownRequestError && error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Usuario no encontrado o ID inválido" },
-      { status: 404 }
+      { error: "Error interno del servidor" },
+      { status: 500 }
     );
   }
 }
