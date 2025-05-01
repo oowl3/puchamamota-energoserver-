@@ -15,6 +15,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import { useTheme } from 'next-themes';
 import Header_loguin from '../components/elements/header/Header_loguin';
+import Header_menu from '../components/elements/header/Header_menu';
 
 ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Filler, Legend);
 
@@ -82,7 +83,7 @@ const Dulson_2 = () => {
     <main className="sm:ml-[200px] mt-20 px-4 sm:px-8 w-full font-urbanist text-[var(--color-text)] min-h-screen">
       <div className="w-full px-4 py-6">
 
-        <Header_loguin />
+        <Header_menu />
 
         <section className="mb-10">
           <p className="text-sm text-[var(--color-v-4)] font-semibold">

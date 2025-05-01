@@ -17,14 +17,12 @@ const Header_loguin = () => {
             ENERGOSERVER
           </h3>
         </Link>
-        
+
         <Link href="/" className='block w-11 h-11 group'>
-          <Button_clasic>
-            <span className="material-icons text-white text-xl transition-all group-hover:translate-y-[-0.25rem]">person_apron</span>
-            <h6 className="font-urbanist font-normal text-white text-[0.5rem] absolute bottom-[-0.75rem] opacity-0 group-hover:opacity-100 transition-opacity">
-              perfil
-            </h6>
-          </Button_clasic>
+        <Button_clasic>
+          <span className="material-icons text-sm">person_apron</span>
+          <p className="text-xs">z</p>
+        </Button_clasic>
         </Link>
       </div>
     </header>
