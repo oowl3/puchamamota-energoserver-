@@ -23,12 +23,16 @@ npm install next-themes
 npm install gsap
 
 
-
 # Para prisma
 npx prisma generate
 npx prisma db push
 npx prisma db seed
+
+#Cosas a instalar Neon
+npm install pg
+
 ```
+
 ## Faker en la BD
 ¿Como acceder a el menu de la BD?
 ```bash
