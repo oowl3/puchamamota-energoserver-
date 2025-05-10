@@ -27,10 +27,6 @@ export default async function HomePage() {
           <h2>Completa tu registro, llenando el siguiente formulario</h2>
         </div>
       )}
-
-      <pre className="bg-gray-100 p-4 rounded-lg">
-        {JSON.stringify(userData, null, 2)}
-      </pre>
     </div>
   )
 }

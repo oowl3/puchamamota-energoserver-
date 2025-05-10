@@ -63,6 +63,7 @@ model Usuario {
   genero          String?
   telefono        String?
   tarifaId        BigInt
+  codigoesp       String?
   configuracionId BigInt?
   rolId           BigInt?
   

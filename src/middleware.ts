@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 
 const protectedRoutes = ["/home"];
 const authRoutes = ["/login", "/register"];
+const publicApiRoutes = ["/api/auth/"]; // Ruta de NextAuth que debe ser pública
 
 export async function middleware(req: NextRequest) {
     const token = await getToken({
@@ -12,24 +13,29 @@ export async function middleware(req: NextRequest) {
     });
 
     const { pathname } = req.nextUrl;
-    const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
-    const isAuthRoute = authRoutes.includes(pathname);
 
-    // 1. Redirigir usuarios autenticados lejos de rutas de autenticación
-    if (isAuthRoute && token) {
-        return NextResponse.redirect(new URL('/home', req.url));
+    // 1. Permitir acceso público a rutas específicas de la API (como NextAuth)
+    const isPublicApiRoute = publicApiRoutes.some(route => pathname.startsWith(route));
+    if (isPublicApiRoute) {
+        return NextResponse.next();
     }
 
-    // 2. Proteger rutas restringidas
-    if (isProtected) {
+    // 2. Proteger el resto de rutas API
+    if (pathname.startsWith('/api')) {
         if (!token) {
-            return NextResponse.redirect(new URL('/start', req.url));
+            return new NextResponse(
+                JSON.stringify({ error: 'No autorizado' }),
+                { 
+                    status: 401, 
+                    headers: { 'Content-Type': 'application/json' } 
+                }
+            );
         }
-        
-        // 3. Inyectar ID de usuario en headers de la solicitud
+
+        // Inyectar user ID en headers para APIs protegidas
         const requestHeaders = new Headers(req.headers);
         requestHeaders.set('x-user-id', token.id as string);
-        
+
         return NextResponse.next({
             request: {
                 headers: requestHeaders,
@@ -37,9 +43,21 @@ export async function middleware(req: NextRequest) {
         });
     }
 
+    // 3. Redirigir usuarios autenticados desde rutas de login/register
+    const isAuthRoute = authRoutes.includes(pathname);
+    if (isAuthRoute && token) {
+        return NextResponse.redirect(new URL('/home', req.url));
+    }
+
+    // 4. Proteger rutas como /home
+    const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
+    if (isProtected && !token) {
+        return NextResponse.redirect(new URL('/start', req.url));
+    }
+
     return NextResponse.next();
 }
 
 export const config = {
-    matcher: ["/home/:path*", "/login", "/register"]
+    matcher: ["/home/:path*", "/api/:path*", "/login", "/register"]
 };
