@@ -4,9 +4,8 @@ import { z } from "zod";
 
 // Esquema de validación
 const dispositivoSchema = z.object({
-  codigoEspUsuario: z.number().int().positive(),
+  codigoesp: z.string().optional(),
   nombreDispositivo: z.string().min(1, "El nombre del dispositivo es requerido"),
-  nombreAparato: z.string().min(1, "El nombre del aparato es requerido"),
   consumoAparatoSug: z.number().int().positive(),
   ubicacionId: z.number().int().positive(),
   grupoId: z.number().int().positive().optional()
@@ -18,7 +17,8 @@ export async function GET() {
     const dispositivos = await prisma.dispositivo.findMany({
       include: {
         listaUbicacion: true,
-        grupo: true
+        grupo: true,
+        consumos: true
       }
     });
 
@@ -26,10 +26,16 @@ export async function GET() {
       dispositivos.map(dispositivo => ({
         ...dispositivo,
         id: dispositivo.id.toString(),
-        codigoEspUsuario: dispositivo.codigoEspUsuario.toString(),
         consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
         ubicacionId: dispositivo.ubicacionId.toString(),
-        grupoId: dispositivo.grupoId?.toString()
+        grupoId: dispositivo.grupoId?.toString(),
+        consumos: dispositivo.consumos.map(consumo => ({
+          ...consumo,
+          id: consumo.id.toString(),
+          dispositivoId: consumo.dispositivoId.toString(),
+          consumo: consumo.consumo.toString(),
+          fecha: consumo.fecha.toISOString()
+        }))
       }))
     );
 
@@ -50,16 +56,16 @@ export async function POST(request: Request) {
 
     const nuevoDispositivo = await prisma.dispositivo.create({
       data: {
-        codigoEspUsuario: validatedData.codigoEspUsuario,
+        codigoesp: validatedData.codigoesp,
         nombreDispositivo: validatedData.nombreDispositivo,
-        nombreAparato: validatedData.nombreAparato,
         consumoAparatoSug: validatedData.consumoAparatoSug,
         ubicacionId: validatedData.ubicacionId,
         grupoId: validatedData.grupoId
       },
       include: {
         listaUbicacion: true,
-        grupo: true
+        grupo: true,
+        consumos: true
       }
     });
 
@@ -67,10 +73,16 @@ export async function POST(request: Request) {
       {
         ...nuevoDispositivo,
         id: nuevoDispositivo.id.toString(),
-        codigoEspUsuario: nuevoDispositivo.codigoEspUsuario.toString(),
         consumoAparatoSug: nuevoDispositivo.consumoAparatoSug.toString(),
         ubicacionId: nuevoDispositivo.ubicacionId.toString(),
-        grupoId: nuevoDispositivo.grupoId?.toString()
+        grupoId: nuevoDispositivo.grupoId?.toString(),
+        consumos: nuevoDispositivo.consumos.map(consumo => ({
+          ...consumo,
+          id: consumo.id.toString(),
+          dispositivoId: consumo.dispositivoId.toString(),
+          consumo: consumo.consumo.toString(),
+          fecha: consumo.fecha.toISOString()
+        }))
       },
       { status: 201 }
     );
