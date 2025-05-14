@@ -1,13 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 
-// 1. Primero definimos el tipo del cliente extendido
+// 1. Tipo del cliente extendido
 type ExtendedPrismaClient = ReturnType<typeof getExtendedPrismaClient>;
 
-// 2. Función que crea el cliente extendido
+// 2. Función para extender el cliente
 function getExtendedPrismaClient() {
   return new PrismaClient().$extends({
     query: {
-      async $allOperations({ operation, model, args, query }) {
+      async $allOperations({ args, query }) {  // <-- Quitamos variables no usadas
         const result = await query(args);
         return convertBigIntToString(result);
       },
@@ -15,26 +15,27 @@ function getExtendedPrismaClient() {
   });
 }
 
-// 3. Función recursiva para convertir BigInt
-function convertBigIntToString(obj: any): any {
+// 3. Función recursiva para BigInt (sin 'any')
+function convertBigIntToString(obj: unknown): unknown {
   if (typeof obj === 'bigint') {
     return obj.toString();
   } else if (Array.isArray(obj)) {
     return obj.map(convertBigIntToString);
   } else if (obj !== null && typeof obj === 'object') {
-    const newObj: { [key: string]: any } = {};
+    const newObj: Record<string, unknown> = {};
     for (const key in obj) {
-      newObj[key] = convertBigIntToString(obj[key]);
+      const value = (obj as Record<string, unknown>)[key];
+      newObj[key] = convertBigIntToString(value);
     }
     return newObj;
   }
   return obj;
 }
 
-// 4. Creamos la instancia
+// 4. Instancia del cliente
 const prisma: ExtendedPrismaClient = getExtendedPrismaClient();
 
-// 5. Declaración global ajustada
+// 5. Declaración global
 declare global {
   // eslint-disable-next-line no-var
   var prisma: ExtendedPrismaClient | undefined;
