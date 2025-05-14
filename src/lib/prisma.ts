@@ -7,7 +7,7 @@ type ExtendedPrismaClient = ReturnType<typeof getExtendedPrismaClient>;
 function getExtendedPrismaClient() {
   return new PrismaClient().$extends({
     query: {
-      async $allOperations({ args, query }) {  // <-- Quitamos variables no usadas
+      async $allOperations({ args, query }) {  
         const result = await query(args);
         return convertBigIntToString(result);
       },
@@ -15,7 +15,6 @@ function getExtendedPrismaClient() {
   });
 }
 
-// 3. Función recursiva para BigInt (sin 'any')
 function convertBigIntToString(obj: unknown): unknown {
   if (typeof obj === 'bigint') {
     return obj.toString();
