@@ -45,3 +45,17 @@ Generador de datos falsos
 ```
 Comandos Utiles .Dev
 rafce 
+
+
+
+# 1. Resetea todo al último commit remoto, borrando cambios locales
+git reset --hard HEAD
+
+# 2. Limpia archivos no rastreados (como archivos nuevos o temporales)
+git clean -fd
+
+# 3. Asegúrate de estar en la rama correcta (por ejemplo, 'main')
+git checkout my-ramita
+
+# 4. Trae y fusiona los últimos cambios del repositorio remoto
+git pull origin my-ramita

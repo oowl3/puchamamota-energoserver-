@@ -1,3 +1,5 @@
+'use client'
+
 import { ThemeToggle } from "./components/ThemeToggle";
 import Header_start from "./components/elements/header/Header_start";
 import Footer_start from "./components/elements/footer/Footer_start";

@@ -1,24 +1,46 @@
 import { PrismaClient } from '@prisma/client';
 
-declare global {
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined; 
+// 1. Primero definimos el tipo del cliente extendido
+type ExtendedPrismaClient = ReturnType<typeof getExtendedPrismaClient>;
+
+// 2. Función que crea el cliente extendido
+function getExtendedPrismaClient() {
+  return new PrismaClient().$extends({
+    query: {
+      async $allOperations({ operation, model, args, query }) {
+        const result = await query(args);
+        return convertBigIntToString(result);
+      },
+    },
+  });
 }
 
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query'] : [],
-});
-
-prisma.$use(async (params, next) => {
-  const result = await next(params);
-  if (params.model === 'Usuario') {
-    if (result?.id) result.id = result.id.toString();
-    if (result?.configuracionId) result.configuracionId = result.configuracionId.toString();
-    if (result?.rolId) result.rolId = result.rolId.toString();
+// 3. Función recursiva para convertir BigInt
+function convertBigIntToString(obj: any): any {
+  if (typeof obj === 'bigint') {
+    return obj.toString();
+  } else if (Array.isArray(obj)) {
+    return obj.map(convertBigIntToString);
+  } else if (obj !== null && typeof obj === 'object') {
+    const newObj: { [key: string]: any } = {};
+    for (const key in obj) {
+      newObj[key] = convertBigIntToString(obj[key]);
+    }
+    return newObj;
   }
-  return result;
-});
+  return obj;
+}
+
+// 4. Creamos la instancia
+const prisma: ExtendedPrismaClient = getExtendedPrismaClient();
+
+// 5. Declaración global ajustada
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: ExtendedPrismaClient | undefined;
+}
+
+// Configuración para desarrollo
+if (process.env.NODE_ENV === 'development') global.prisma = prisma;
 
 export default prisma;
-
-
