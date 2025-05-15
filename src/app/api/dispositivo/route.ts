@@ -4,7 +4,7 @@ import { z } from "zod";
 
 // Esquema de validación
 const dispositivoSchema = z.object({
-  codigoesp: z.string().optional(),
+  codigoesp: z.string().optional(), // Coincide con el modelo (String? @unique)
   nombreDispositivo: z.string().min(1, "El nombre del dispositivo es requerido"),
   consumoAparatoSug: z.number().int().positive(),
   ubicacionId: z.number().int().positive(),
@@ -29,13 +29,7 @@ export async function GET() {
         consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
         ubicacionId: dispositivo.ubicacionId.toString(),
         grupoId: dispositivo.grupoId?.toString(),
-        consumos: dispositivo.consumos.map(consumo => ({
-          ...consumo,
-          id: consumo.id.toString(),
-          dispositivoId: consumo.dispositivoId.toString(),
-          consumo: consumo.consumo.toString(),
-          fecha: consumo.fecha.toISOString()
-        }))
+        codigoesp: dispositivo.codigoesp || null // Mantenemos null si es undefined
       }))
     );
 
@@ -75,14 +69,7 @@ export async function POST(request: Request) {
         id: nuevoDispositivo.id.toString(),
         consumoAparatoSug: nuevoDispositivo.consumoAparatoSug.toString(),
         ubicacionId: nuevoDispositivo.ubicacionId.toString(),
-        grupoId: nuevoDispositivo.grupoId?.toString(),
-        consumos: nuevoDispositivo.consumos.map(consumo => ({
-          ...consumo,
-          id: consumo.id.toString(),
-          dispositivoId: consumo.dispositivoId.toString(),
-          consumo: consumo.consumo.toString(),
-          fecha: consumo.fecha.toISOString()
-        }))
+        grupoId: nuevoDispositivo.grupoId?.toString()
       },
       { status: 201 }
     );
@@ -90,8 +77,16 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error POST dispositivo:", error);
     
-    return error instanceof z.ZodError 
-      ? NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-      : NextResponse.json({ error: "Error al crear dispositivo" }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Error al crear dispositivo" },
+      { status: 500 }
+    );
   }
 }
