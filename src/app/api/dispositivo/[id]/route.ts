@@ -1,9 +1,8 @@
-
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema para actualización (campos opcionales)
+// Esquema para actualización
 const dispositivoUpdateSchema = z.object({
   codigoesp: z.string().optional(),
   nombreDispositivo: z.string().min(1).optional(),
@@ -12,8 +11,15 @@ const dispositivoUpdateSchema = z.object({
   grupoId: z.number().int().positive().optional().nullable()
 });
 
+// Tipo para parámetros de ruta
+type Params = {
+  params: {
+    id: string;
+  };
+};
+
 // GET: Obtener dispositivo por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: Params) {
   try {
     const id = Number(params.id);
     
@@ -58,7 +64,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT: Actualizar dispositivo
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: Params) {
   try {
     const id = Number(params.id);
     
@@ -76,7 +82,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       where: { id },
       data: {
         ...validatedData,
-        // Manejar explícitamente null para grupoId
         grupoId: validatedData.grupoId === null ? null : validatedData.grupoId
       },
       include: {
@@ -112,7 +117,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE: Eliminar dispositivo
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: Params) {
   try {
     const id = Number(params.id);
     
