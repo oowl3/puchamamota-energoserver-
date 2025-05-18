@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema para actualización
+// Esquema de validación para actualización
 const dispositivoUpdateSchema = z.object({
   codigoesp: z.string().optional(),
   nombreDispositivo: z.string().min(1).optional(),
   consumoAparatoSug: z.number().int().positive().optional(),
   ubicacionId: z.number().int().positive().optional(),
-  grupoId: z.number().int().positive().optional().nullable()
+  grupoId: z.number().int().positive().nullable().optional()
 });
 
 // GET: Obtener dispositivo por ID
@@ -42,9 +42,11 @@ export async function GET(
       );
     }
 
+    // Convertir BigInt a string para la respuesta JSON
     return NextResponse.json({
       ...dispositivo,
       id: dispositivo.id.toString(),
+      codigoesp: dispositivo.codigoesp,
       consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
       ubicacionId: dispositivo.ubicacionId.toString(),
       grupoId: dispositivo.grupoId?.toString()
@@ -80,7 +82,10 @@ export async function PUT(
     const dispositivoActualizado = await prisma.dispositivo.update({
       where: { id },
       data: {
-        ...validatedData,
+        codigoesp: validatedData.codigoesp,
+        nombreDispositivo: validatedData.nombreDispositivo,
+        consumoAparatoSug: validatedData.consumoAparatoSug,
+        ubicacionId: validatedData.ubicacionId,
         grupoId: validatedData.grupoId === null ? null : validatedData.grupoId
       },
       include: {
