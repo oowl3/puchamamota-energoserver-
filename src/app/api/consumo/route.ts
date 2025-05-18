@@ -1,93 +1,137 @@
+// app/api/dispositivos/[id]/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación
-const consumoSchema = z.object({
-  codigoesp: z.string().min(1, "El código ESP es requerido"),
-  voltaje: z.number().positive("El voltaje debe ser un número positivo"),
-  corriente: z.number().positive("La corriente debe ser un número positivo"),
-  potencia: z.number().positive("La potencia debe ser un número positivo"),
-  energia: z.number().positive("La energía debe ser un número positiva"),
+// Esquema para actualización
+const updateDispositivoSchema = z.object({
+  codigoesp: z.string().nullable().optional(),
+  nombreDispositivo: z.string().min(1).optional(),
+  consumoAparatoSug: z
+    .string()
+    .regex(/^\d+$/)
+    .transform((v) => BigInt(v))
+    .optional(),
+  ubicacionId: z
+    .string()
+    .regex(/^\d+$/)
+    .transform((v) => BigInt(v))
+    .optional(),
+  grupoId: z
+    .union([
+      z.string().regex(/^\d+/).transform((v) => BigInt(v)),
+      z.null()
+    ])
+    .optional(),
 });
 
-// GET: Obtener todos los registros de consumo
-export async function GET() {
+// GET: Obtener dispositivo por ID
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const consumos = await prisma.consumo.findMany({
+    const dispositivoId = BigInt(params.id);
+
+    const dispositivo = await prisma.dispositivo.findUnique({
+      where: { id: dispositivoId },
       include: {
-        dispositivo: true,
-      },
-      orderBy: {
-        fechaHora: "desc",
+        listaUbicacion: true,
+        grupo: true,
+        consumos: true,
       },
     });
 
-    return NextResponse.json(
-      consumos.map((consumo) => ({
-        ...consumo,
-        id: consumo.id.toString(),
-        voltaje: consumo.voltaje.toString(),
-        corriente: consumo.corriente.toString(),
-        potencia: consumo.potencia.toString(),
-        energia: consumo.energia.toString(),
-        fechaHora: consumo.fechaHora.toISOString(),
-        dispositivo: consumo.dispositivo
-          ? {
-              ...consumo.dispositivo,
-              id: consumo.dispositivo.id.toString(),
-            }
-          : null,
-      }))
-    );
+    if (!dispositivo) {
+      return NextResponse.json(
+        { error: "Dispositivo no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      ...dispositivo,
+      id: dispositivo.id.toString(),
+      consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
+      ubicacionId: dispositivo.ubicacionId.toString(),
+      grupoId: dispositivo.grupoId?.toString() ?? null,
+      listaUbicacion: dispositivo.listaUbicacion ? {
+        ...dispositivo.listaUbicacion,
+        id: dispositivo.listaUbicacion.id.toString(),
+      } : null,
+      grupo: dispositivo.grupo ? {
+        ...dispositivo.grupo,
+        id: dispositivo.grupo.id.toString(),
+      } : null,
+      consumos: dispositivo.consumos.map((c) => ({
+        ...c,
+        id: c.id.toString(),
+      })),
+    });
+    
   } catch (error) {
-    console.error("Error GET consumos:", error);
+    console.error("Error GET dispositivo:", error);
+    
+    if (error instanceof Error && error.message.includes("Invalid value")) {
+      return NextResponse.json(
+        { error: "ID inválido" },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Error al obtener los registros de consumo" },
+      { error: "Error al obtener el dispositivo" },
       { status: 500 }
     );
   }
 }
 
-// POST: Crear nuevo registro de consumo
-export async function POST(request: Request) {
+// PUT: Actualizar dispositivo
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
+    const dispositivoId = BigInt(params.id);
     const body = await request.json();
-    const validatedData = consumoSchema.parse(body);
+    const validatedData = updateDispositivoSchema.parse(body);
 
-    const nuevoConsumo = await prisma.consumo.create({
+    const dispositivoActualizado = await prisma.dispositivo.update({
+      where: { id: dispositivoId },
       data: {
-        codigoesp: validatedData.codigoesp,
-        voltaje: validatedData.voltaje,
-        corriente: validatedData.corriente,
-        potencia: validatedData.potencia,
-        energia: validatedData.energia,
+        ...validatedData,
+        // Manejar conversión explícita para campos opcionales
+        grupoId: validatedData.grupoId ?? undefined,
       },
       include: {
-        dispositivo: true,
+        listaUbicacion: true,
+        grupo: true,
+        consumos: true,
       },
     });
 
-    return NextResponse.json(
-      {
-        ...nuevoConsumo,
-        id: nuevoConsumo.id.toString(),
-        voltaje: nuevoConsumo.voltaje.toString(),
-        corriente: nuevoConsumo.corriente.toString(),
-        potencia: nuevoConsumo.potencia.toString(),
-        energia: nuevoConsumo.energia.toString(),
-        fechaHora: nuevoConsumo.fechaHora.toISOString(),
-        dispositivo: nuevoConsumo.dispositivo
-          ? {
-              ...nuevoConsumo.dispositivo,
-              id: nuevoConsumo.dispositivo.id.toString(),
-            }
-          : null,
-      },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      ...dispositivoActualizado,
+      id: dispositivoActualizado.id.toString(),
+      consumoAparatoSug: dispositivoActualizado.consumoAparatoSug.toString(),
+      ubicacionId: dispositivoActualizado.ubicacionId.toString(),
+      grupoId: dispositivoActualizado.grupoId?.toString() ?? null,
+      listaUbicacion: dispositivoActualizado.listaUbicacion ? {
+        ...dispositivoActualizado.listaUbicacion,
+        id: dispositivoActualizado.listaUbicacion.id.toString(),
+      } : null,
+      grupo: dispositivoActualizado.grupo ? {
+        ...dispositivoActualizado.grupo,
+        id: dispositivoActualizado.grupo.id.toString(),
+      } : null,
+      consumos: dispositivoActualizado.consumos.map((c) => ({
+        ...c,
+        id: c.id.toString(),
+      })),
+    });
+
   } catch (error) {
-    console.error("Error POST consumo:", error);
+    console.error("Error PUT dispositivo:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -96,8 +140,49 @@ export async function POST(request: Request) {
       );
     }
 
+    if (error instanceof Error && error.message.includes("RecordNotFound")) {
+      return NextResponse.json(
+        { error: "Dispositivo no encontrado" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Error al crear registro de consumo" },
+      { error: "Error al actualizar el dispositivo" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Eliminar dispositivo
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const dispositivoId = BigInt(params.id);
+
+    await prisma.dispositivo.delete({
+      where: { id: dispositivoId },
+    });
+
+    return NextResponse.json(
+      { message: "Dispositivo eliminado correctamente" },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("Error DELETE dispositivo:", error);
+
+    if (error instanceof Error && error.message.includes("RecordNotFound")) {
+      return NextResponse.json(
+        { error: "Dispositivo no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Error al eliminar el dispositivo" },
       { status: 500 }
     );
   }

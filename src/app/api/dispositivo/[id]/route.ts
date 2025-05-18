@@ -11,15 +11,11 @@ const dispositivoUpdateSchema = z.object({
   grupoId: z.number().int().positive().optional().nullable()
 });
 
-// Tipo para parámetros de ruta
-type Params = {
-  params: {
-    id: string;
-  };
-};
-
 // GET: Obtener dispositivo por ID
-export async function GET(request: Request, { params }: Params) {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const id = Number(params.id);
     
@@ -64,7 +60,10 @@ export async function GET(request: Request, { params }: Params) {
 }
 
 // PUT: Actualizar dispositivo
-export async function PUT(request: Request, { params }: Params) {
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const id = Number(params.id);
     
@@ -117,7 +116,10 @@ export async function PUT(request: Request, { params }: Params) {
 }
 
 // DELETE: Eliminar dispositivo
-export async function DELETE(request: Request, { params }: Params) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const id = Number(params.id);
     
