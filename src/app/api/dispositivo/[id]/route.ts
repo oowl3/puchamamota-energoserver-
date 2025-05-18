@@ -1,21 +1,21 @@
-// src/app/api/dispositivo/[id]/route.ts
-
+// app/api/dispositivos/[id]/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 
 const dispositivoSchema = z.object({
   codigoesp: z.string().nullable().optional().default(null),
-  nombreDispositivo: z.string().min(1, "El nombre es requerido"),
+  nombreDispositivo: z.string().min(1, "El nombre es requerido").optional(),
   consumoAparatoSug: z
     .string()
     .regex(/^\d+$/, "Debe ser un número entero")
-    .transform((v) => BigInt(v)),
+    .transform((v) => BigInt(v))
+    .optional(),
   ubicacionId: z
     .string()
     .regex(/^\d+$/, "Debe ser un número entero")
-    .transform((v) => BigInt(v)),
+    .transform((v) => BigInt(v))
+    .optional(),
   grupoId: z
     .union([
       z.string().regex(/^\d+$/).transform((v) => BigInt(v)),
@@ -25,21 +25,37 @@ const dispositivoSchema = z.object({
     .default(null),
 });
 
+const updateDispositivoSchema = dispositivoSchema.partial();
+
+function convertDispositivo(dispositivo: any) {
+  return {
+    ...dispositivo,
+    id: dispositivo.id.toString(),
+    consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
+    ubicacionId: dispositivo.ubicacionId.toString(),
+    grupoId: dispositivo.grupoId?.toString() ?? null,
+    listaUbicacion: dispositivo.listaUbicacion ? {
+      ...dispositivo.listaUbicacion,
+      id: dispositivo.listaUbicacion.id.toString(),
+    } : null,
+    grupo: dispositivo.grupo ? {
+      ...dispositivo.grupo,
+      id: dispositivo.grupo.id.toString(),
+    } : null,
+    consumos: dispositivo.consumos.map((consumo: any) => ({
+      ...consumo,
+      id: consumo.id.toString(),
+    })),
+  };
+}
+
 // GET: Obtener dispositivo por ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Validar que id no es un array
-    if (Array.isArray(params.id)) {
-      return NextResponse.json(
-        { error: "ID debe ser un único valor" },
-        { status: 400 }
-      );
-    }
-
-    // Validar ID numérico
+    // Validar ID
     if (!/^\d+$/.test(params.id)) {
       return NextResponse.json(
         { error: "ID debe ser un número entero" },
@@ -65,29 +81,9 @@ export async function GET(
       );
     }
 
-    // Convertir BigInt a strings
-    return NextResponse.json({
-      ...dispositivo,
-      id: dispositivo.id.toString(),
-      consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
-      ubicacionId: dispositivo.ubicacionId.toString(),
-      grupoId: dispositivo.grupoId?.toString() ?? null,
-      listaUbicacion: dispositivo.listaUbicacion ? {
-        ...dispositivo.listaUbicacion,
-        id: dispositivo.listaUbicacion.id.toString(),
-      } : null,
-      grupo: dispositivo.grupo ? {
-        ...dispositivo.grupo,
-        id: dispositivo.grupo.id.toString(),
-      } : null,
-      consumos: dispositivo.consumos.map((consumo) => ({
-        ...consumo,
-        id: consumo.id.toString(),
-      })),
-    });
-
+    return NextResponse.json(convertDispositivo(dispositivo));
   } catch (error) {
-    console.error("Error GET dispositivo:", error);
+    console.error("Error GET dispositivo por ID:", error);
     return NextResponse.json(
       { error: "Error al obtener el dispositivo" },
       { status: 500 }
@@ -98,40 +94,32 @@ export async function GET(
 // PUT: Actualizar dispositivo
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Validar que id no es un array
-    if (Array.isArray(params.id)) {
-      return NextResponse.json(
-        { error: "ID debe ser un único valor" },
-        { status: 400 }
-      );
-    }
-
-    // Validar ID numérico
+    // Validar ID
     if (!/^\d+$/.test(params.id)) {
       return NextResponse.json(
-        { error: "ID inválido" },
+        { error: "ID debe ser un número entero" },
         { status: 400 }
       );
     }
     const id = BigInt(params.id);
 
-    // Validar cuerpo de la solicitud
+    // Validar cuerpo
     const body = await request.json();
-    const validatedData = dispositivoSchema.parse(body);
+    const validatedData = updateDispositivoSchema.parse(body);
 
-    // Actualizar dispositivo
+    // Filtrar datos undefined
+    const updateData = Object.entries(validatedData).reduce((acc, [key, value]) => {
+      if (value !== undefined) acc[key] = value;
+      return acc;
+    }, {} as any);
+
+    // Actualizar
     const updatedDispositivo = await prisma.dispositivo.update({
       where: { id },
-      data: {
-        codigoesp: validatedData.codigoesp,
-        nombreDispositivo: validatedData.nombreDispositivo,
-        consumoAparatoSug: validatedData.consumoAparatoSug,
-        ubicacionId: validatedData.ubicacionId,
-        grupoId: validatedData.grupoId,
-      },
+      data: updateData,
       include: {
         listaUbicacion: true,
         grupo: true,
@@ -139,60 +127,15 @@ export async function PUT(
       },
     });
 
-    // Convertir BigInt a strings
-    return NextResponse.json({
-      ...updatedDispositivo,
-      id: updatedDispositivo.id.toString(),
-      consumoAparatoSug: updatedDispositivo.consumoAparatoSug.toString(),
-      ubicacionId: updatedDispositivo.ubicacionId.toString(),
-      grupoId: updatedDispositivo.grupoId?.toString() ?? null,
-      listaUbicacion: updatedDispositivo.listaUbicacion ? {
-        ...updatedDispositivo.listaUbicacion,
-        id: updatedDispositivo.listaUbicacion.id.toString(),
-      } : null,
-      grupo: updatedDispositivo.grupo ? {
-        ...updatedDispositivo.grupo,
-        id: updatedDispositivo.grupo.id.toString(),
-      } : null,
-      consumos: updatedDispositivo.consumos.map((consumo) => ({
-        ...consumo,
-        id: consumo.id.toString(),
-      })),
-    });
-
+    return NextResponse.json(convertDispositivo(updatedDispositivo));
   } catch (error) {
     console.error("Error PUT dispositivo:", error);
-    
-    // Manejar errores de validación Zod
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors[0].message },
         { status: 400 }
       );
     }
-    
-    // Manejar errores de Prisma
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return NextResponse.json(
-          { error: "Dispositivo no encontrado" },
-          { status: 404 }
-        );
-      }
-      if (error.code === "P2002") {
-        return NextResponse.json(
-          { error: "El código ESP ya existe" },
-          { status: 409 }
-        );
-      }
-      if (error.code === "P2003") {
-        return NextResponse.json(
-          { error: "Error en relación con claves foráneas" },
-          { status: 400 }
-        );
-      }
-    }
-
     return NextResponse.json(
       { error: "Error al actualizar el dispositivo" },
       { status: 500 }
@@ -203,55 +146,36 @@ export async function PUT(
 // DELETE: Eliminar dispositivo
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Validar que id no es un array
-    if (Array.isArray(params.id)) {
-      return NextResponse.json(
-        { error: "ID debe ser un único valor" },
-        { status: 400 }
-      );
-    }
-
-    // Validar ID numérico
+    // Validar ID
     if (!/^\d+$/.test(params.id)) {
       return NextResponse.json(
-        { error: "ID inválido" },
+        { error: "ID debe ser un número entero" },
         { status: 400 }
       );
     }
     const id = BigInt(params.id);
 
-    // Eliminar dispositivo
-    await prisma.dispositivo.delete({
-      where: { id },
-    });
+    // Verificar existencia
+    const dispositivo = await prisma.dispositivo.findUnique({ where: { id } });
+    if (!dispositivo) {
+      return NextResponse.json(
+        { error: "Dispositivo no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Eliminar
+    await prisma.dispositivo.delete({ where: { id } });
 
     return NextResponse.json(
       { message: "Dispositivo eliminado correctamente" },
       { status: 200 }
     );
-
   } catch (error) {
     console.error("Error DELETE dispositivo:", error);
-    
-    // Manejar errores de Prisma
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return NextResponse.json(
-          { error: "Dispositivo no encontrado" },
-          { status: 404 }
-        );
-      }
-      if (error.code === "P2003") {
-        return NextResponse.json(
-          { error: "No se puede eliminar debido a registros relacionados" },
-          { status: 400 }
-        );
-      }
-    }
-
     return NextResponse.json(
       { error: "Error al eliminar el dispositivo" },
       { status: 500 }
