@@ -1,3 +1,5 @@
+// src/app/api/dispositivo/[id]/route.ts
+
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
@@ -26,10 +28,18 @@ const dispositivoSchema = z.object({
 // GET: Obtener dispositivo por ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string | string[] } }
 ) {
   try {
-    // Validar ID
+    // Validar que id no es un array
+    if (Array.isArray(params.id)) {
+      return NextResponse.json(
+        { error: "ID debe ser un único valor" },
+        { status: 400 }
+      );
+    }
+
+    // Validar ID numérico
     if (!/^\d+$/.test(params.id)) {
       return NextResponse.json(
         { error: "ID debe ser un número entero" },
@@ -88,10 +98,18 @@ export async function GET(
 // PUT: Actualizar dispositivo
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string | string[] } }
 ) {
   try {
-    // Validar ID
+    // Validar que id no es un array
+    if (Array.isArray(params.id)) {
+      return NextResponse.json(
+        { error: "ID debe ser un único valor" },
+        { status: 400 }
+      );
+    }
+
+    // Validar ID numérico
     if (!/^\d+$/.test(params.id)) {
       return NextResponse.json(
         { error: "ID inválido" },
@@ -100,7 +118,7 @@ export async function PUT(
     }
     const id = BigInt(params.id);
 
-    // Validar cuerpo
+    // Validar cuerpo de la solicitud
     const body = await request.json();
     const validatedData = dispositivoSchema.parse(body);
 
@@ -121,6 +139,7 @@ export async function PUT(
       },
     });
 
+    // Convertir BigInt a strings
     return NextResponse.json({
       ...updatedDispositivo,
       id: updatedDispositivo.id.toString(),
@@ -144,7 +163,7 @@ export async function PUT(
   } catch (error) {
     console.error("Error PUT dispositivo:", error);
     
-    // Manejar errores de validación
+    // Manejar errores de validación Zod
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors[0].message },
@@ -184,10 +203,18 @@ export async function PUT(
 // DELETE: Eliminar dispositivo
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string | string[] } }
 ) {
   try {
-    // Validar ID
+    // Validar que id no es un array
+    if (Array.isArray(params.id)) {
+      return NextResponse.json(
+        { error: "ID debe ser un único valor" },
+        { status: 400 }
+      );
+    }
+
+    // Validar ID numérico
     if (!/^\d+$/.test(params.id)) {
       return NextResponse.json(
         { error: "ID inválido" },
@@ -209,6 +236,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Error DELETE dispositivo:", error);
     
+    // Manejar errores de Prisma
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2025") {
         return NextResponse.json(
