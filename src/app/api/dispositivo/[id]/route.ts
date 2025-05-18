@@ -1,24 +1,61 @@
-import { NextResponse } from "next/server";
+// app/api/dispositivos/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación para actualización
+// Esquema para actualización (campos opcionales)
 const dispositivoUpdateSchema = z.object({
-  codigoesp: z.string().optional(),
-  nombreDispositivo: z.string().min(1).optional(),
-  consumoAparatoSug: z.number().int().positive().optional(),
-  ubicacionId: z.number().int().positive().optional(),
-  grupoId: z.number().int().positive().nullable().optional()
+  codigoesp: z.string().nullable().optional(),
+  nombreDispositivo: z.string().min(1, "El nombre es requerido").optional(),
+  consumoAparatoSug: z
+    .string()
+    .regex(/^\d+$/, "Debe ser un número entero")
+    .transform((v) => BigInt(v))
+    .optional(),
+  ubicacionId: z
+    .string()
+    .regex(/^\d+$/, "Debe ser un número entero")
+    .transform((v) => BigInt(v))
+    .optional(),
+  grupoId: z
+    .union([
+      z.string().regex(/^\d+$/).transform((v) => BigInt(v)),
+      z.null()
+    ])
+    .optional()
 });
+
+// Helper para serializar BigInt
+function serializeDispositivo(dispositivo: any) {
+  return {
+    ...dispositivo,
+    id: dispositivo.id.toString(),
+    consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
+    ubicacionId: dispositivo.ubicacionId.toString(),
+    grupoId: dispositivo.grupoId?.toString() ?? null,
+    listaUbicacion: dispositivo.listaUbicacion ? {
+      ...dispositivo.listaUbicacion,
+      id: dispositivo.listaUbicacion.id.toString(),
+    } : null,
+    grupo: dispositivo.grupo ? {
+      ...dispositivo.grupo,
+      id: dispositivo.grupo.id.toString(),
+    } : null,
+    consumos: dispositivo.consumos.map((consumo: any) => ({
+      ...consumo,
+      id: consumo.id.toString(),
+    })),
+  };
+}
 
 // GET: Obtener dispositivo por ID
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Validar ID
     const id = Number(params.id);
-    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "ID inválido" },
@@ -26,6 +63,7 @@ export async function GET(
       );
     }
 
+    // Obtener dispositivo
     const dispositivo = await prisma.dispositivo.findUnique({
       where: { id },
       include: {
@@ -42,20 +80,12 @@ export async function GET(
       );
     }
 
-    // Convertir BigInt a string para la respuesta JSON
-    return NextResponse.json({
-      ...dispositivo,
-      id: dispositivo.id.toString(),
-      codigoesp: dispositivo.codigoesp,
-      consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
-      ubicacionId: dispositivo.ubicacionId.toString(),
-      grupoId: dispositivo.grupoId?.toString()
-    });
+    return NextResponse.json(serializeDispositivo(dispositivo));
 
   } catch (error) {
     console.error("Error GET dispositivo:", error);
     return NextResponse.json(
-      { error: "Error al obtener dispositivo" },
+      { error: "Error interno del servidor" },
       { status: 500 }
     );
   }
@@ -63,12 +93,12 @@ export async function GET(
 
 // PUT: Actualizar dispositivo
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Validar ID
     const id = Number(params.id);
-    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "ID inválido" },
@@ -76,17 +106,16 @@ export async function PUT(
       );
     }
 
+    // Validar cuerpo
     const body = await request.json();
     const validatedData = dispositivoUpdateSchema.parse(body);
 
-    const dispositivoActualizado = await prisma.dispositivo.update({
+    // Actualizar dispositivo
+    const updatedDispositivo = await prisma.dispositivo.update({
       where: { id },
       data: {
-        codigoesp: validatedData.codigoesp,
-        nombreDispositivo: validatedData.nombreDispositivo,
-        consumoAparatoSug: validatedData.consumoAparatoSug,
-        ubicacionId: validatedData.ubicacionId,
-        grupoId: validatedData.grupoId === null ? null : validatedData.grupoId
+        ...validatedData,
+        grupoId: validatedData.grupoId ?? undefined
       },
       include: {
         listaUbicacion: true,
@@ -95,26 +124,20 @@ export async function PUT(
       }
     });
 
-    return NextResponse.json({
-      ...dispositivoActualizado,
-      id: dispositivoActualizado.id.toString(),
-      consumoAparatoSug: dispositivoActualizado.consumoAparatoSug.toString(),
-      ubicacionId: dispositivoActualizado.ubicacionId.toString(),
-      grupoId: dispositivoActualizado.grupoId?.toString()
-    });
+    return NextResponse.json(serializeDispositivo(updatedDispositivo));
 
   } catch (error) {
     console.error("Error PUT dispositivo:", error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.errors.map(e => e.message) },
         { status: 400 }
       );
     }
     
     return NextResponse.json(
-      { error: "Error al actualizar dispositivo" },
+      { error: "Error interno del servidor" },
       { status: 500 }
     );
   }
@@ -122,12 +145,12 @@ export async function PUT(
 
 // DELETE: Eliminar dispositivo
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Validar ID
     const id = Number(params.id);
-    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "ID inválido" },
@@ -135,20 +158,20 @@ export async function DELETE(
       );
     }
 
+    // Eliminar dispositivo
     await prisma.dispositivo.delete({
       where: { id }
     });
 
     return NextResponse.json(
-      { message: "Dispositivo eliminado correctamente" },
+      { success: true, message: "Dispositivo eliminado correctamente" },
       { status: 200 }
     );
 
   } catch (error) {
     console.error("Error DELETE dispositivo:", error);
-    
     return NextResponse.json(
-      { error: "Error al eliminar dispositivo" },
+      { error: "Error interno del servidor" },
       { status: 500 }
     );
   }
