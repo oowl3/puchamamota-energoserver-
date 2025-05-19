@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
-import type { NextRequest } from 'next/server';
 
 const createSchema = z.object({
   codigo: z.string().min(1, "El código es requerido"),
@@ -13,7 +12,7 @@ const createSchema = z.object({
 });
 
 // GET todos los registros
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const registros = await prisma.prueba_w.findMany();
     
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST nuevo registro
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validatedData = createSchema.parse(body);
