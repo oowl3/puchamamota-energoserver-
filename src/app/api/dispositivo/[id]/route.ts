@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import type { NextRequest } from 'next/server';
 
 const updateSchema = z.object({
   codigoesp: z.string().optional().nullable(),
@@ -13,10 +14,14 @@ const updateSchema = z.object({
 });
 
 // GET por ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
     const dispositivo = await prisma.dispositivo.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       include: { grupo: true, consumos: true }
     });
 
@@ -45,9 +50,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PUT actualizar dispositivo
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
     const body = await request.json();
+    
     const validatedData = updateSchema.parse({
       ...body,
       consumoAparatoSug: body.consumoAparatoSug ? Number(body.consumoAparatoSug) : undefined,
@@ -55,9 +65,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       grupoId: body.grupoId ? Number(body.grupoId) : null
     });
 
-    // Verificar existencia del dispositivo
     const existente = await prisma.dispositivo.findUnique({
-      where: { id: Number(params.id) }
+      where: { id: Number(id) }
     });
     
     if (!existente) {
@@ -67,7 +76,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       );
     }
 
-    // Validar código ESP único si se modifica
     if (validatedData.codigoesp && validatedData.codigoesp !== existente.codigoesp) {
       const codigoExistente = await prisma.dispositivo.findUnique({
         where: { codigoesp: validatedData.codigoesp }
@@ -82,7 +90,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const actualizado = await prisma.dispositivo.update({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       data: validatedData
     });
 
@@ -104,10 +112,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE dispositivo
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
     await prisma.dispositivo.delete({
-      where: { id: Number(params.id) }
+      where: { id: Number(id) }
     });
     
     return NextResponse.json(
