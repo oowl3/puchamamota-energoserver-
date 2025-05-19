@@ -1,88 +1,73 @@
+// src/app/api/dispositivos/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
-// Esquema de validación
 const dispositivoSchema = z.object({
-  codigoesp: z.string().nullable().optional().default(null),
-  nombreDispositivo: z.string().min(1, "El nombre es requerido"),
-  consumoAparatoSug: z
-    .string()
-    .regex(/^\d+$/, "Debe ser un número entero")
-    .transform((v) => BigInt(v)),
-  ubicacionId: z
-    .string()
-    .regex(/^\d+$/, "Debe ser un número entero")
-    .transform((v) => BigInt(v)),
-  grupoId: z
-    .union([
-      z.string().regex(/^\d+$/).transform((v) => BigInt(v)),
-      z.null()
-    ])
-    .optional()
-    .default(null),
+  codigoesp: z.string().optional().nullable(),
+  nombreDispositivo: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+  consumoAparatoSug: z.number().positive("El consumo debe ser un número positivo"),
+  ubicacionId: z.number().positive("ID de ubicación inválido"),
+  listaUbicacion: z.string().min(2, "Ubicación debe tener al menos 2 caracteres"),
+  grupoId: z.number().positive("ID de grupo inválido").optional().nullable(),
 });
 
-// GET: Obtener todos los dispositivos
+// GET todos los dispositivos
 export async function GET() {
   try {
     const dispositivos = await prisma.dispositivo.findMany({
       include: {
-        listaUbicacion: true,
         grupo: true,
-        consumos: true,
-      },
+        consumos: true
+      }
     });
 
     return NextResponse.json(
-      dispositivos.map((dispositivo) => ({
-        ...dispositivo,
-        id: dispositivo.id.toString(),
-        consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
-        ubicacionId: dispositivo.ubicacionId.toString(),
-        grupoId: dispositivo.grupoId?.toString() ?? null,
-        listaUbicacion: dispositivo.listaUbicacion ? {
-          ...dispositivo.listaUbicacion,
-          id: dispositivo.listaUbicacion.id.toString(),
-        } : null,
-        grupo: dispositivo.grupo ? {
-          ...dispositivo.grupo,
-          id: dispositivo.grupo.id.toString(),
-        } : null,
-        consumos: dispositivo.consumos.map((consumo) => ({
-          ...consumo,
-          id: consumo.id.toString(),
-        })),
+      dispositivos.map(d => ({
+        ...d,
+        id: d.id.toString(),
+        consumoAparatoSug: d.consumoAparatoSug.toString(),
+        ubicacionId: d.ubicacionId.toString(),
+        grupoId: d.grupoId?.toString()
       }))
     );
+
   } catch (error) {
     console.error("Error GET dispositivos:", error);
     return NextResponse.json(
-      { error: "Error al obtener los dispositivos" },
+      { error: "Error al obtener dispositivos" },
       { status: 500 }
     );
   }
 }
 
-// POST: Crear nuevo dispositivo
+// POST nuevo dispositivo
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const validatedData = dispositivoSchema.parse(body);
+    const validatedData = dispositivoSchema.parse({
+      ...body,
+      consumoAparatoSug: Number(body.consumoAparatoSug),
+      ubicacionId: Number(body.ubicacionId),
+      grupoId: body.grupoId ? Number(body.grupoId) : null
+    });
+
+    // Verificar código ESP único
+    if (validatedData.codigoesp) {
+      const existente = await prisma.dispositivo.findUnique({
+        where: { codigoesp: validatedData.codigoesp }
+      });
+      
+      if (existente) {
+        return NextResponse.json(
+          { error: "El código ESP ya está registrado" },
+          { status: 400 }
+        );
+      }
+    }
 
     const nuevoDispositivo = await prisma.dispositivo.create({
-      data: {
-        codigoesp: validatedData.codigoesp,
-        nombreDispositivo: validatedData.nombreDispositivo,
-        consumoAparatoSug: validatedData.consumoAparatoSug,
-        ubicacionId: validatedData.ubicacionId,
-        grupoId: validatedData.grupoId,
-      },
-      include: {
-        listaUbicacion: true,
-        grupo: true,
-        consumos: true,
-      },
+      data: validatedData
     });
 
     return NextResponse.json(
@@ -91,34 +76,16 @@ export async function POST(request: Request) {
         id: nuevoDispositivo.id.toString(),
         consumoAparatoSug: nuevoDispositivo.consumoAparatoSug.toString(),
         ubicacionId: nuevoDispositivo.ubicacionId.toString(),
-        grupoId: nuevoDispositivo.grupoId?.toString() ?? null,
-        listaUbicacion: nuevoDispositivo.listaUbicacion ? {
-          ...nuevoDispositivo.listaUbicacion,
-          id: nuevoDispositivo.listaUbicacion.id.toString(),
-        } : null,
-        grupo: nuevoDispositivo.grupo ? {
-          ...nuevoDispositivo.grupo,
-          id: nuevoDispositivo.grupo.id.toString(),
-        } : null,
-        consumos: nuevoDispositivo.consumos.map((consumo) => ({
-          ...consumo,
-          id: consumo.id.toString(),
-        })),
+        grupoId: nuevoDispositivo.grupoId?.toString()
       },
       { status: 201 }
     );
+
   } catch (error) {
     console.error("Error POST dispositivo:", error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Error al crear el dispositivo" },
-      { status: 500 }
-    );
+    
+    return error instanceof z.ZodError 
+      ? NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      : NextResponse.json({ error: "Error al crear dispositivo" }, { status: 500 });
   }
 }

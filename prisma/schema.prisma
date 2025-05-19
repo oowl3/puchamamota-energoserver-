@@ -115,9 +115,9 @@ model Dispositivo {
   nombreDispositivo   String
   consumoAparatoSug   BigInt
   ubicacionId         BigInt
+  listaUbicacion      String
   grupoId             BigInt? 
 
-  listaUbicacion      ListaUbicacion   @relation("ListaUbicacionRelation", fields: [ubicacionId], references: [id])
   grupo               UsuarioGrupo?    @relation("GrupoDispositivoRelation", fields: [grupoId], references: [id])
   consumos            Consumo[]        // Relación con tabla de consumos
 }
@@ -133,13 +133,4 @@ model Consumo {
   fechaHora       DateTime   @default(now()) // Importante: para saber cuándo se registró
 
   dispositivo     Dispositivo? @relation(fields: [codigoesp], references: [codigoesp])
-}
-
-
-
-
-model ListaUbicacion {
-  id          BigInt        @id @default(autoincrement())
-  ubicacion   String?
-  dispositivos Dispositivo[] @relation("ListaUbicacionRelation")
 }
