@@ -1,70 +1,87 @@
+// src/app/api/prueba_w/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import type { NextRequest } from 'next/server';
 
-// Esquema de validación
-const pruebaWSchema = z.object({
-  codigoesp: z.string().transform(val => BigInt(val)),
-  voltaje: z.string().refine(val => !isNaN(parseFloat(val)), {
-    message: "voltaje must be a valid decimal number",
-  }),
-  corriente: z.string().refine(val => !isNaN(parseFloat(val)), {
-    message: "corriente must be a valid decimal number",
-  }),
-  potencia: z.string().refine(val => !isNaN(parseFloat(val)), {
-    message: "potencia must be a valid decimal number",
-  }),
-  energia: z.string().refine(val => !isNaN(parseFloat(val)), {
-    message: "energia must be a valid decimal number",
-  }),
+const createSchema = z.object({
+  codigo: z.string().min(1, "El código es requerido"),
+  voltaje: z.string().regex(/^\d+\.?\d*$/, "Valor de voltaje inválido"),
+  corriente: z.string().regex(/^\d+\.?\d*$/, "Valor de corriente inválido"),
+  potencia: z.string().regex(/^\d+\.?\d*$/, "Valor de potencia inválido"),
+  energia: z.string().regex(/^\d+\.?\d*$/, "Valor de energía inválido"),
 });
 
-// POST
-export async function POST(request: Request) {
+// GET todos los registros
+export async function GET(request: NextRequest) {
   try {
-    const body = await request.json();
-    const validatedData = pruebaWSchema.parse(body);
-
-    const nuevaPruebaW = await prisma.prueba_w.create({
-      data: {
-        codigoesp: validatedData.codigoesp,
-        voltaje: validatedData.voltaje,
-        corriente: validatedData.corriente,
-        potencia: validatedData.potencia,
-        energia: validatedData.energia,
-      }
-    });
-
-    const responseData = {
-      ...nuevaPruebaW,
-      id: nuevaPruebaW.id.toString(),
-      codigoesp: nuevaPruebaW.codigoesp.toString()
-    };
-
-    return NextResponse.json(responseData, { status: 201 });
+    const registros = await prisma.prueba_w.findMany();
+    
+    return NextResponse.json(
+      registros.map(r => ({
+        ...r,
+        id: r.id.toString(),
+        voltaje: r.voltaje.toString(),
+        corriente: r.corriente.toString(),
+        potencia: r.potencia.toString(),
+        energia: r.energia.toString()
+      }))
+    );
+    
   } catch (error) {
-    console.error("Error en POST:", error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Error GET prueba_w:", error);
+    return NextResponse.json(
+      { error: "Error al obtener registros" },
+      { status: 500 }
+    );
   }
 }
 
-// GET
-export async function GET() {
+// POST nuevo registro
+export async function POST(request: NextRequest) {
   try {
-    const pruebas = await prisma.prueba_w.findMany();
+    const body = await request.json();
+    const validatedData = createSchema.parse(body);
+    
+    // Verificar código único
+    const existente = await prisma.prueba_w.findFirst({
+      where: { codigo: validatedData.codigo }
+    });
+    
+    if (existente) {
+      return NextResponse.json(
+        { error: "El código ya está registrado" },
+        { status: 400 }
+      );
+    }
+    
+    const nuevoRegistro = await prisma.prueba_w.create({
+      data: {
+        codigo: validatedData.codigo,
+        voltaje: validatedData.voltaje,
+        corriente: validatedData.corriente,
+        potencia: validatedData.potencia,
+        energia: validatedData.energia
+      }
+    });
 
-    const pruebasConvertidas = pruebas.map((prueba) => ({
-      ...prueba,
-      id: prueba.id.toString(),
-      codigoesp: prueba.codigoesp.toString()
-    }));
+    return NextResponse.json(
+      {
+        ...nuevoRegistro,
+        id: nuevoRegistro.id.toString(),
+        voltaje: nuevoRegistro.voltaje.toString(),
+        corriente: nuevoRegistro.corriente.toString(),
+        potencia: nuevoRegistro.potencia.toString(),
+        energia: nuevoRegistro.energia.toString()
+      },
+      { status: 201 }
+    );
 
-    return NextResponse.json(pruebasConvertidas);
   } catch (error) {
-    console.error("Error en GET:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Error POST prueba_w:", error);
+    
+    return error instanceof z.ZodError 
+      ? NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      : NextResponse.json({ error: "Error al crear registro" }, { status: 500 });
   }
 }
