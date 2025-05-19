@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
@@ -24,14 +24,20 @@ const updateDispositivoSchema = z.object({
     .optional(),
 });
 
+// Helper para errores de Prisma
+const isPrismaError = (error: unknown): error is { code: string } => {
+  return typeof error === 'object' && error !== null && 'code' in error;
+};
+
 // GET: Obtener dispositivo por ID
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Validar ID
-    if (!/^\d+$/.test(params.id)) {
+    const { id } = await params;
+    
+    if (!/^\d+$/.test(id)) {
       return NextResponse.json(
         { error: "ID debe ser un número entero" },
         { status: 400 }
@@ -39,7 +45,7 @@ export async function GET(
     }
 
     const dispositivo = await prisma.dispositivo.findUnique({
-      where: { id: BigInt(params.id) },
+      where: { id: BigInt(id) },
       include: {
         listaUbicacion: true,
         grupo: true,
@@ -54,25 +60,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
-      ...dispositivo,
-      id: dispositivo.id.toString(),
-      consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
-      ubicacionId: dispositivo.ubicacionId.toString(),
-      grupoId: dispositivo.grupoId?.toString() ?? null,
-      listaUbicacion: dispositivo.listaUbicacion ? {
-        ...dispositivo.listaUbicacion,
-        id: dispositivo.listaUbicacion.id.toString(),
-      } : null,
-      grupo: dispositivo.grupo ? {
-        ...dispositivo.grupo,
-        id: dispositivo.grupo.id.toString(),
-      } : null,
-      consumos: dispositivo.consumos.map((consumo) => ({
-        ...consumo,
-        id: consumo.id.toString(),
-      })),
-    });
+    return NextResponse.json(transformDispositivo(dispositivo));
 
   } catch (error) {
     console.error("Error GET dispositivo:", error);
@@ -85,12 +73,13 @@ export async function GET(
 
 // PUT: Actualizar dispositivo
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Validar ID
-    if (!/^\d+$/.test(params.id)) {
+    const { id } = await params;
+    
+    if (!/^\d+$/.test(id)) {
       return NextResponse.json(
         { error: "ID debe ser un número entero" },
         { status: 400 }
@@ -101,7 +90,7 @@ export async function PUT(
     const validatedData = updateDispositivoSchema.parse(body);
 
     const updatedDispositivo = await prisma.dispositivo.update({
-      where: { id: BigInt(params.id) },
+      where: { id: BigInt(id) },
       data: validatedData,
       include: {
         listaUbicacion: true,
@@ -110,25 +99,7 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({
-      ...updatedDispositivo,
-      id: updatedDispositivo.id.toString(),
-      consumoAparatoSug: updatedDispositivo.consumoAparatoSug.toString(),
-      ubicacionId: updatedDispositivo.ubicacionId.toString(),
-      grupoId: updatedDispositivo.grupoId?.toString() ?? null,
-      listaUbicacion: updatedDispositivo.listaUbicacion ? {
-        ...updatedDispositivo.listaUbicacion,
-        id: updatedDispositivo.listaUbicacion.id.toString(),
-      } : null,
-      grupo: updatedDispositivo.grupo ? {
-        ...updatedDispositivo.grupo,
-        id: updatedDispositivo.grupo.id.toString(),
-      } : null,
-      consumos: updatedDispositivo.consumos.map((consumo) => ({
-        ...consumo,
-        id: consumo.id.toString(),
-      })),
-    });
+    return NextResponse.json(transformDispositivo(updatedDispositivo));
 
   } catch (error) {
     console.error("Error PUT dispositivo:", error);
@@ -140,14 +111,11 @@ export async function PUT(
       );
     }
     
-    if (typeof error === 'object' && error !== null && 'code' in error) {
-      const prismaError = error as { code: string };
-      if (prismaError.code === "P2025") {
-        return NextResponse.json(
-          { error: "Dispositivo no encontrado" },
-          { status: 404 }
-        );
-      }
+    if (isPrismaError(error) && error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Dispositivo no encontrado" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(
@@ -159,11 +127,13 @@ export async function PUT(
 
 // DELETE: Eliminar dispositivo
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!/^\d+$/.test(params.id)) {
+    const { id } = await params;
+    
+    if (!/^\d+$/.test(id)) {
       return NextResponse.json(
         { error: "ID debe ser un número entero" },
         { status: 400 }
@@ -171,7 +141,7 @@ export async function DELETE(
     }
 
     await prisma.dispositivo.delete({
-      where: { id: BigInt(params.id) },
+      where: { id: BigInt(id) },
     });
 
     return NextResponse.json(
@@ -182,14 +152,11 @@ export async function DELETE(
   } catch (error) {
     console.error("Error DELETE dispositivo:", error);
     
-    if (typeof error === 'object' && error !== null && 'code' in error) {
-      const prismaError = error as { code: string };
-      if (prismaError.code === "P2025") {
-        return NextResponse.json(
-          { error: "Dispositivo no encontrado" },
-          { status: 404 }
-        );
-      }
+    if (isPrismaError(error) && error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Dispositivo no encontrado" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(
@@ -198,3 +165,24 @@ export async function DELETE(
     );
   }
 }
+
+// Función helper para transformar el dispositivo
+const transformDispositivo = (dispositivo: any) => ({
+  ...dispositivo,
+  id: dispositivo.id.toString(),
+  consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
+  ubicacionId: dispositivo.ubicacionId.toString(),
+  grupoId: dispositivo.grupoId?.toString() ?? null,
+  listaUbicacion: dispositivo.listaUbicacion ? {
+    ...dispositivo.listaUbicacion,
+    id: dispositivo.listaUbicacion.id.toString(),
+  } : null,
+  grupo: dispositivo.grupo ? {
+    ...dispositivo.grupo,
+    id: dispositivo.grupo.id.toString(),
+  } : null,
+  consumos: dispositivo.consumos.map((consumo: any) => ({
+    ...consumo,
+    id: consumo.id.toString(),
+  })),
+});
