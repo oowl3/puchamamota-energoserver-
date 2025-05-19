@@ -6,6 +6,7 @@ import Footer_start from "./components/elements/footer/Footer_start";
 import IconProp from "./components/IconProp";
 import Navbar_home from "./components/elements/navbar/Navbar_home";
 import FollowCursorGSAP from "./components/elements/follows/Follow_basic";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -34,10 +35,12 @@ export default function Home() {
               <h1 className="font-urbanist font-normal">hace posible.</h1>
             </div>
             <div>
-              <img
+              <Image
                 src="https://picsum.photos/200/300.webp"
                 alt="Imagen mágica"
                 className="ml-3 w-100 h-75"
+                width={200}
+                height={300}
               />
             </div>
           </div>
@@ -71,10 +74,12 @@ export default function Home() {
               rel="noopener noreferrer"
               className="flex flex-col items-center"
             >
-              <img
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUPHQAcUpU4ack8TlcMotlvafXNm2QOajyQw&s"
+              <Image
+                src="https://play-lh.googleusercontent.com/1Ns1T_qN0pEXMvZeZ5lQNAR8z4blP7ce2J2Nn5doXvt2T1g_W7VMORdWHaApkOooupI"
                 alt="Amazon"
-                className="h-12 w-auto mb-2"
+                className="h-12 w-[120px] mb-2 object-contain"
+                width={120}
+                height={48}
               />
             </a>
 
@@ -85,10 +90,12 @@ export default function Home() {
               rel="noopener noreferrer"
               className="flex flex-col items-center"
             >
-              <img
+              <Image
                 src="https://rappicard.mx/wp-content/uploads/2024/10/logo-mercado-libre.png"
                 alt="Mercado Libre"
-                className="h-12 w-auto mb-2"
+                className="h-12 w-[120px] mb-2 object-contain"
+                width={120}
+                height={48}
               />
             </a>
 
@@ -97,7 +104,7 @@ export default function Home() {
               href="https://www.youtube.com/watch?v=V99CluoQNLg"
               className="flex flex-col items-center"
             >
-              <div className="h-12 w-auto mb-2">
+              <div className="h-12 w-[120px] mb-2">
                 <IconProp />
               </div>
             </a>
