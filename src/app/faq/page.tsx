@@ -1,29 +1,78 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header_start from '../components/elements/header/Header_start';
 import Footer_start from '../components/elements/footer/Footer_start';
 import { ThemeToggle } from '../components/ThemeToggle';
-import faqData from './faq.json'; 
 import FollowCursor from '../components/elements/follows/Follow_basic';
+
+interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+}
 
 const Questions = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const filteredFaqs = faqData.filter(({ question, answer }) => {
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/informacion');
+        if (!response.ok) throw new Error('Error al obtener datos');
+        const data = await response.json();
+        
+        // Mapear los datos de la API a la estructura esperada
+        const formattedData = data.map((item: any) => ({
+          id: item.id,
+          question: item.pregunta,
+          answer: item.respuesta
+        }));
+        
+        setFaqs(formattedData);
+      } catch (err) {
+        setError('Error al cargar las preguntas frecuentes');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredFaqs = faqs.filter(({ question, answer }) => {
     const searchString = `${question} ${answer}`.toLowerCase();
     return searchString.includes(searchQuery.trim().toLowerCase());
   });
 
+  if (isLoading) {
+    return (
+      <div className="text-center py-6">
+        <p>Cargando preguntas...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-6 text-red-500">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div  className="pt-12 max-w-4xl mx-auto min-h-screen flex flex-col">
-      <Header_start />
-      <FollowCursor/> 
+      <div className="pt-12 max-w-4xl mx-auto min-h-screen flex flex-col">
+        <Header_start />
+        <FollowCursor/>
         <main className="flex-grow px-4">
           <h1 className="text-3xl mt-6 mb-4 font-urbanist font-medium">
             Preguntas Frecuentes
           </h1>
-
 
           <div className="mb-4 w-full max-w-[500px] relative">
             <label htmlFor="searchInput" className="sr-only">
@@ -46,16 +95,15 @@ const Questions = () => {
 
           <hr className="mb-6 border-gray-300" />
 
-          {/* Lista de resultados */}
           <ul 
             id="faqList"
             className="space-y-6 mb-8"
             aria-live="polite"
             aria-atomic="true"
           >
-            {filteredFaqs.map((faq, index) => (
+            {filteredFaqs.map((faq) => (
               <li
-                key={`faq-${index}-${faq.question.slice(0,5)}`}
+                key={faq.id}
                 className="rounded-sm p-4 hover:shadow-sm transition-shadow"
                 style={{
                   borderWidth: "0.1rem",
@@ -77,7 +125,6 @@ const Questions = () => {
               </li>
             ))}
 
-            {/* Estado vacío */}
             {filteredFaqs.length === 0 && (
               <li 
                 className="text-center py-6 text-gray-500 italic"

@@ -6,6 +6,7 @@ const protectedRoutes = ["/home"];
 const authRoutes = ["/login", "/register"];
 const publicApiRoutes = [
   "/api/auth/",         // Rutas de NextAuth
+  "/api/informacion",   // Nueva ruta pública
   "/api/prueba_w",      // Nueva ruta pública
   "/api/consumo"        // Nueva ruta pública
 ];
@@ -18,7 +19,7 @@ export async function middleware(req: NextRequest) {
 
     const { pathname } = req.nextUrl;
 
-    // 1. Permitir acceso público a rutas API específicas
+
     const isPublicApiRoute = publicApiRoutes.some(route => pathname.startsWith(route));
     //const isPublicApiRoute = publicApiRoutes.includes(pathname);
 
@@ -39,7 +40,6 @@ export async function middleware(req: NextRequest) {
             );
         }
 
-        // Inyectar user ID en headers para APIs protegidas
         const requestHeaders = new Headers(req.headers);
         requestHeaders.set('x-user-id', token.id as string);
 
