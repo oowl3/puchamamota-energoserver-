@@ -229,6 +229,10 @@ const Profile = () => {
         >
           {loading ? 'Guardando...' : 'Guardar'}
         </button>
+
+
+        <button>Eliminar cuenta</button>
+        <p>*proximamente</p>
       </form>
 
       {message && (
