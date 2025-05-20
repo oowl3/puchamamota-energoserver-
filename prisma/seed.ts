@@ -1,4 +1,3 @@
-// seed.ts
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -76,11 +75,24 @@ async function main() {
     }
   });
 
-  // Insertar Información de FAQ (informacion)
+  // Creación del usuario principal
+  const usuario = await prisma.usuario.create({
+    data: {
+      email: '222310024@itslerdo.edu.mx',
+      nombre: 'Josue',
+      apellido: 'Ojeda',
+      edad: 25,
+      genero: 'Masculino',
+      telefono: '+528717961885',
+      tarifaId: 1,
+      rolId: 1,
+    },
+  });
+
+  // Insertar Información de FAQ
   await prisma.informacion.createMany({
     data: [
-      {
-        pregunta: "✨¿Cómo creo una cuenta en la plataforma?",
+      {pregunta: "✨¿Cómo creo una cuenta en la plataforma?",
         respuesta: "Regístrate en menos de un minuto con tu correo electrónico y una contraseña. Una vez dentro, agrega tus sensores y empieza a optimizar tu consumo de energía. ¡Crea tu cuenta ahora!",
       },
       {
@@ -131,7 +143,102 @@ async function main() {
         pregunta: "🛠️¿Es difícil de instalar o configurar?",
         respuesta: "La instalación y configuración son extremadamente simples. Solo necesitas conectar el sensor al dispositivo que deseas monitorear y seguir las instrucciones en la plataforma para sincronizarlo con tu cuenta. ¡Es rápido y fácil!",
       },
+
     ],
+  });
+
+  // Configuración del usuario
+  const usuarioConfig = await prisma.usuarioConfiguracion.create({
+    data: {
+      periodoFacturacion: 'mensual',
+      consumoAnterior: 100,
+      consumoActual: 150,
+      planActualId: 1,
+      usuarios: {
+        connect: { id: usuario.id }
+      }
+    }
+  });
+
+  // Configuración de alertas
+  await prisma.configuracionAlerta.create({
+    data: {
+      nombre: 'Alerta Consumo Alto',
+      tiempo: 24,
+      consumo: 200,
+      usuarioConfiguracionId: usuarioConfig.id,
+    }
+  });
+
+  // Grupo Historial
+  const grupoHistorial = await prisma.grupoHistorial.create({
+    data: {
+      periodo: 30,
+      fechaCorte: new Date('2024-12-31'),
+      consumo: 500
+    }
+  });
+
+  // Grupo de usuario
+  const usuarioGrupo = await prisma.usuarioGrupo.create({
+    data: {
+      nombre: 'Hogar Principal',
+      usuarioId: usuario.id,
+      historialId: grupoHistorial.id
+    }
+  });
+
+  // Dispositivo con consumos
+  const dispositivo = await prisma.dispositivo.create({
+    data: {
+      codigoesp: 'ESP32-001',
+      nombreDispositivo: 'Refrigerador Inteligente',
+      consumoAparatoSug: 150,
+      ubicacionId: 1,
+      listaUbicacion: 'Cocina',
+      grupoId: usuarioGrupo.id,
+      consumos: {
+        create: [
+          {
+            voltaje: 120.5,
+            corriente: 2.1,
+            potencia: 253.05,
+            energia: 1.2,
+            fechaHora: new Date()
+          },
+          {
+            voltaje: 121.0,
+            corriente: 2.0,
+            potencia: 242.0,
+            energia: 1.5,
+            fechaHora: new Date(new Date().setHours(new Date().getHours() - 2))
+          }
+        ]
+      }
+    },
+    include: {
+      consumos: true
+    }
+  });
+
+  // Datos de prueba_w
+  await prisma.prueba_w.createMany({
+    data: [
+      {
+        codigo: 'W-001',
+        voltaje: 220.0,
+        corriente: 5.5,
+        potencia: 1210.0,
+        energia: 2.4
+      },
+      {
+        codigo: 'W-002',
+        voltaje: 110.0,
+        corriente: 8.3,
+        potencia: 913.0,
+        energia: 1.8
+      }
+    ]
   });
 }
 
