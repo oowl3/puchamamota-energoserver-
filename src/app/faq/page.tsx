@@ -11,6 +11,12 @@ interface FaqItem {
   answer: string;
 }
 
+interface ApiFaqItem {
+  id: string;
+  pregunta: string;
+  respuesta: string;
+}
+
 const Questions = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
@@ -22,10 +28,10 @@ const Questions = () => {
       try {
         const response = await fetch('/api/informacion');
         if (!response.ok) throw new Error('Error al obtener datos');
-        const data = await response.json();
+        const data: ApiFaqItem[] = await response.json();
         
-        // Mapear los datos de la API a la estructura esperada
-        const formattedData = data.map((item: any) => ({
+        // Mapeo con tipo específico
+        const formattedData = data.map((item: ApiFaqItem) => ({
           id: item.id,
           question: item.pregunta,
           answer: item.respuesta
