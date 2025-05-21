@@ -2,17 +2,17 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const dispositivoSchema = z.object({
+  nombreDispositivo: z.string().min(1, "El nombre del dispositivo es requerido"),
+  consumoAparatoSug: z.string().regex(/^\d+$/, "Debe ser un número positivo").transform(BigInt),
+  ubicacion: z.string().min(1, "La ubicación es requerida"),
   codigoesp: z.string().optional().nullable(),
-  nombreDispositivo: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
-  consumoAparatoSug: z.number().positive("El consumo debe ser un número positivo"),
-  ubicacionId: z.number().positive("ID de ubicación inválido"),
-  listaUbicacion: z.string().min(2, "Ubicación debe tener al menos 2 caracteres"),
-  grupoId: z.number().positive("ID de grupo inválido").optional().nullable(),
+  grupoId: z.string().regex(/^\d+$/).optional().nullable().transform(val => val ? BigInt(val) : null),
 });
 
-// GET todos los dispositivos
+// GET todos los dispositivos con sus consumos
 export async function GET() {
   try {
     const dispositivos = await prisma.dispositivo.findMany({
@@ -27,8 +27,22 @@ export async function GET() {
         ...d,
         id: d.id.toString(),
         consumoAparatoSug: d.consumoAparatoSug.toString(),
-        ubicacionId: d.ubicacionId.toString(),
-        grupoId: d.grupoId?.toString()
+        grupoId: d.grupoId?.toString() ?? null,
+        grupo: d.grupo ? {
+          ...d.grupo,
+          id: d.grupo.id.toString()
+        } : null,
+        consumos: d.consumos.map(c => ({
+          ...c,
+          id: c.id.toString(),
+          // Campos corregidos según el modelo Consumo
+          codigoesp: c.codigoesp,
+          voltaje: c.voltaje.toString(),
+          corriente: c.corriente.toString(),
+          potencia: c.potencia.toString(),
+          energia: c.energia.toString(),
+          fechaHora: c.fechaHora.toISOString()
+        }))
       }))
     );
 
@@ -45,47 +59,50 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const validatedData = dispositivoSchema.parse({
-      ...body,
-      consumoAparatoSug: Number(body.consumoAparatoSug),
-      ubicacionId: Number(body.ubicacionId),
-      grupoId: body.grupoId ? Number(body.grupoId) : null
-    });
-
-    // Verificar código ESP único
-    if (validatedData.codigoesp) {
-      const existente = await prisma.dispositivo.findUnique({
-        where: { codigoesp: validatedData.codigoesp }
-      });
-      
-      if (existente) {
-        return NextResponse.json(
-          { error: "El código ESP ya está registrado" },
-          { status: 400 }
-        );
-      }
-    }
+    const validatedData = dispositivoSchema.parse(body);
 
     const nuevoDispositivo = await prisma.dispositivo.create({
-      data: validatedData
+      data: {
+        ...validatedData,
+        consumos: undefined // Aseguramos que no se intenten crear consumos desde aquí
+      }
     });
 
-    return NextResponse.json(
-      {
-        ...nuevoDispositivo,
-        id: nuevoDispositivo.id.toString(),
-        consumoAparatoSug: nuevoDispositivo.consumoAparatoSug.toString(),
-        ubicacionId: nuevoDispositivo.ubicacionId.toString(),
-        grupoId: nuevoDispositivo.grupoId?.toString()
-      },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      ...nuevoDispositivo,
+      id: nuevoDispositivo.id.toString(),
+      consumoAparatoSug: nuevoDispositivo.consumoAparatoSug.toString(),
+      grupoId: nuevoDispositivo.grupoId?.toString() ?? null
+    }, { status: 201 });
 
   } catch (error) {
     console.error("Error POST dispositivo:", error);
     
-    return error instanceof z.ZodError 
-      ? NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-      : NextResponse.json({ error: "Error al crear dispositivo" }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      );
+    }
+    
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return NextResponse.json(
+          { error: "El código ESP ya está en uso" },
+          { status: 409 }
+        );
+      }
+      if (error.code === 'P2003') {
+        return NextResponse.json(
+          { error: "El grupo especificado no existe" },
+          { status: 404 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
   }
 }

@@ -114,8 +114,7 @@ model Dispositivo {
   codigoesp           String? @unique // Código único, se usará para vincular los consumos
   nombreDispositivo   String
   consumoAparatoSug   BigInt
-  ubicacionId         BigInt
-  listaUbicacion      String
+  ubicacion           String
   grupoId             BigInt? 
 
   grupo               UsuarioGrupo?    @relation("GrupoDispositivoRelation", fields: [grupoId], references: [id])

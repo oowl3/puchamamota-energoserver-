@@ -75,19 +75,8 @@ async function main() {
     }
   });
 
-  // Creación del usuario principal
-  const usuario = await prisma.usuario.create({
-    data: {
-      email: '222310024@itslerdo.edu.mx',
-      nombre: 'Josue',
-      apellido: 'Ojeda',
-      edad: 25,
-      genero: 'Masculino',
-      telefono: '+528717961885',
-      tarifaId: 1,
-      rolId: 1,
-    },
-  });
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
   // Insertar Información de FAQ
   await prisma.informacion.createMany({
@@ -147,6 +136,22 @@ async function main() {
     ],
   });
 
+
+  // Creación del usuario principal
+  const usuario = await prisma.usuario.create({
+    data: {
+      email: '222310024@itslerdo.edu.mx',
+      nombre: 'Josue',
+      apellido: 'Ojeda',
+      edad: 20,
+      genero: 'H',
+      telefono: '8717961885',
+      tarifaId: 1,
+      rolId: 1,
+    },
+  });
+
+
   // Configuración del usuario
   const usuarioConfig = await prisma.usuarioConfiguracion.create({
     data: {
@@ -194,8 +199,7 @@ async function main() {
       codigoesp: 'ESP32-001',
       nombreDispositivo: 'Refrigerador Inteligente',
       consumoAparatoSug: 150,
-      ubicacionId: 1,
-      listaUbicacion: 'Cocina',
+      ubicacion: "cocina",
       grupoId: usuarioGrupo.id,
       consumos: {
         create: [
