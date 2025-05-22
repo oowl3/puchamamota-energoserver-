@@ -5,11 +5,12 @@ import { z } from "zod";
 
 const createSchema = z.object({
   codigo: z.string().min(1, "El código es requerido"),
-  voltaje: z.string().regex(/^\d+\.?\d*$/, "Valor de voltaje inválido"),
-  corriente: z.string().regex(/^\d+\.?\d*$/, "Valor de corriente inválido"),
-  potencia: z.string().regex(/^\d+\.?\d*$/, "Valor de potencia inválido"),
-  energia: z.string().regex(/^\d+\.?\d*$/, "Valor de energía inválido"),
+  voltaje: z.preprocess(val => Number(val), z.number()),
+  corriente: z.preprocess(val => Number(val), z.number()),
+  potencia: z.preprocess(val => Number(val), z.number()),
+  energia: z.preprocess(val => Number(val), z.number())
 });
+
 
 // GET todos los registros
 export async function GET() {
@@ -41,18 +42,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validatedData = createSchema.parse(body);
-    
-    // Verificar código único
-    const existente = await prisma.prueba_w.findFirst({
-      where: { codigo: validatedData.codigo }
-    });
-    
-    if (existente) {
-      return NextResponse.json(
-        { error: "El código ya está registrado" },
-        { status: 400 }
-      );
-    }
     
     const nuevoRegistro = await prisma.prueba_w.create({
       data: {

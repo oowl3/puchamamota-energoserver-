@@ -10,7 +10,7 @@ datasource db {
 
 model prueba_w {
   id               BigInt                 @id @default(autoincrement())
-  codigo           String
+  codigo           String 
   voltaje          Decimal  
   corriente        Decimal  
   potencia         Decimal  
@@ -129,7 +129,7 @@ model Consumo {
   corriente       Decimal
   potencia        Decimal
   energia         Decimal
-  fechaHora       DateTime   @default(now()) // Importante: para saber cuándo se registró
+  fechaHora       DateTime   @default(now()) 
 
   dispositivo     Dispositivo? @relation(fields: [codigoesp], references: [codigoesp])
 }

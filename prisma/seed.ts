@@ -225,25 +225,81 @@ async function main() {
     }
   });
 
-  // Datos de prueba_w
   await prisma.prueba_w.createMany({
     data: [
       {
-        codigo: 'W-001',
+        codigo: 'U-1-001',
+        voltaje: 127.0,
+        corriente: 3.2,
+        potencia: 406.4,
+        energia: 1.1
+      },
+      {
+        codigo: 'U-1-002',
         voltaje: 220.0,
-        corriente: 5.5,
-        potencia: 1210.0,
+        corriente: 6.1,
+        potencia: 1342.0,
+        energia: 2.9
+      },
+      {
+        codigo: 'U-1-003',
+        voltaje: 127.0,
+        corriente: 4.5,
+        potencia: 571.5,
+        energia: 1.6
+      },
+      {
+        codigo: 'U-1-004',
+        voltaje: 127.0,
+        corriente: 2.1,
+        potencia: 266.7,
+        energia: 0.9
+      },
+      {
+        codigo: 'U-1-005',
+        voltaje: 220.0,
+        corriente: 8.0,
+        potencia: 1760.0,
+        energia: 3.7
+      },
+      {
+        codigo: 'U-1-006',
+        voltaje: 127.0,
+        corriente: 1.7,
+        potencia: 215.9,
+        energia: 0.6
+      },
+      {
+        codigo: 'U-1-007',
+        voltaje: 220.0,
+        corriente: 4.3,
+        potencia: 946.0,
+        energia: 2.1
+      },
+      {
+        codigo: 'U-1-008',
+        voltaje: 127.0,
+        corriente: 6.2,
+        potencia: 787.4,
         energia: 2.4
       },
       {
-        codigo: 'W-002',
-        voltaje: 110.0,
-        corriente: 8.3,
-        potencia: 913.0,
-        energia: 1.8
+        codigo: 'U-1-009',
+        voltaje: 220.0,
+        corriente: 5.0,
+        potencia: 1100.0,
+        energia: 2.0
+      },
+      {
+        codigo: 'U-1-010',
+        voltaje: 127.0,
+        corriente: 3.8,
+        potencia: 482.6,
+        energia: 1.3
       }
     ]
   });
+
 }
 
 main()
