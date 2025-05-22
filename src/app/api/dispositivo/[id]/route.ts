@@ -5,23 +5,30 @@ import { Prisma } from "@prisma/client";
 
 const dispositivoUpdateSchema = z.object({
   nombreDispositivo: z.string().min(1).optional(),
-  consumoAparatoSug: z.string().regex(/^\d+$/).transform(BigInt).optional(),
+  consumoAparatoSug: z.string()
+    .regex(/^\d+$/)
+    .transform(BigInt)
+    .optional(),
   ubicacion: z.string().min(1).optional(),
   codigoesp: z.string().optional().nullable(),
-  grupoId: z.string().regex(/^\d+$/).optional().nullable().transform(v => v ? BigInt(v) : null)
+  grupoId: z.string()
+    .regex(/^\d+$/)
+    .optional()
+    .nullable()
+    .transform(v => v ? BigInt(v) : null)
 });
 
 // GET dispositivo por ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Validar ID
-    const id = z.string().regex(/^\d+$/).parse(params.id);
+    const { id } = await params;
+    const parsedId = z.string().regex(/^\d+$/).parse(id);
     
     const dispositivo = await prisma.dispositivo.findUnique({
-      where: { id: BigInt(id) },
+      where: { id: BigInt(parsedId) },
       include: { grupo: true, consumos: true }
     });
 
@@ -72,17 +79,17 @@ export async function GET(
 // PUT Actualizar dispositivo
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Validar ID
-    const id = z.string().regex(/^\d+$/).parse(params.id);
+    const { id } = await params;
+    const parsedId = z.string().regex(/^\d+$/).parse(id);
     
     const body = await request.json();
     const validatedData = dispositivoUpdateSchema.parse(body);
 
     const dispositivoActualizado = await prisma.dispositivo.update({
-      where: { id: BigInt(id) },
+      where: { id: BigInt(parsedId) },
       data: validatedData
     });
 
@@ -134,13 +141,14 @@ export async function PUT(
 // DELETE Eliminar dispositivo
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = z.string().regex(/^\d+$/).parse(params.id);
+    const { id } = await params;
+    const parsedId = z.string().regex(/^\d+$/).parse(id);
 
     await prisma.dispositivo.delete({
-      where: { id: BigInt(id) }
+      where: { id: BigInt(parsedId) }
     });
 
     return new NextResponse(null, { status: 204 });
