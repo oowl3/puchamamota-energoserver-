@@ -1,100 +1,82 @@
+// src/app/api/dispositivos/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
-const dispositivoUpdateSchema = z.object({
-  nombreDispositivo: z.string().min(1).optional(),
-  consumoAparatoSug: z.string().regex(/^\d+$/).transform(BigInt).optional(),
-  ubicacion: z.string().min(1).optional(),
+const dispositivoSchema = z.object({
+  nombreDispositivo: z.string().min(1, "El nombre del dispositivo es requerido"),
+  consumoAparatoSug: z.string().regex(/^\d+$/, "Debe ser un número positivo").transform(BigInt),
+  ubicacion: z.string().min(1, "La ubicación es requerida"),
   codigoesp: z.string().optional().nullable(),
-  grupoId: z.string().regex(/^\d+$/).optional().nullable().transform(v => v ? BigInt(v) : null)
+  grupoId: z.string().regex(/^\d+$/).optional().nullable().transform(val => val ? BigInt(val) : null),
 });
 
-// GET dispositivo por ID
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+// GET todos los dispositivos con sus consumos
+export async function GET() {
   try {
-    // Validar ID
-    const id = z.string().regex(/^\d+$/).parse(params.id);
-    
-    const dispositivo = await prisma.dispositivo.findUnique({
-      where: { id: BigInt(id) },
-      include: { grupo: true, consumos: true }
+    const dispositivos = await prisma.dispositivo.findMany({
+      include: {
+        grupo: true,
+        consumos: true
+      }
     });
 
-    if (!dispositivo) {
-      return NextResponse.json(
-        { error: "Dispositivo no encontrado" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      ...dispositivo,
-      id: dispositivo.id.toString(),
-      consumoAparatoSug: dispositivo.consumoAparatoSug.toString(),
-      grupoId: dispositivo.grupoId?.toString() ?? null,
-      grupo: dispositivo.grupo ? {
-        ...dispositivo.grupo,
-        id: dispositivo.grupo.id.toString()
-      } : null,
-      consumos: dispositivo.consumos.map(c => ({
-        ...c,
-        id: c.id.toString(),
-        voltaje: c.voltaje.toString(),
-        corriente: c.corriente.toString(),
-        potencia: c.potencia.toString(),
-        energia: c.energia.toString(),
-        fechaHora: c.fechaHora.toISOString()
+    return NextResponse.json(
+      dispositivos.map(d => ({
+        ...d,
+        id: d.id.toString(),
+        consumoAparatoSug: d.consumoAparatoSug.toString(),
+        grupoId: d.grupoId?.toString() ?? null,
+        grupo: d.grupo ? {
+          ...d.grupo,
+          id: d.grupo.id.toString()
+        } : null,
+        consumos: d.consumos.map(c => ({
+          ...c,
+          id: c.id.toString(),
+          // Campos corregidos según el modelo Consumo
+          codigoesp: c.codigoesp,
+          voltaje: c.voltaje.toString(),
+          corriente: c.corriente.toString(),
+          potencia: c.potencia.toString(),
+          energia: c.energia.toString(),
+          fechaHora: c.fechaHora.toISOString()
+        }))
       }))
-    });
+    );
 
   } catch (error) {
-    console.error("Error GET dispositivo por ID:", error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
-    
+    console.error("Error GET dispositivos:", error);
     return NextResponse.json(
-      { error: "Error interno del servidor" },
+      { error: "Error al obtener dispositivos" },
       { status: 500 }
     );
   }
 }
 
-// PUT Actualizar dispositivo
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+// POST nuevo dispositivo
+export async function POST(request: Request) {
   try {
-    // Validar ID
-    const id = z.string().regex(/^\d+$/).parse(params.id);
-    
     const body = await request.json();
-    const validatedData = dispositivoUpdateSchema.parse(body);
+    const validatedData = dispositivoSchema.parse(body);
 
-    const dispositivoActualizado = await prisma.dispositivo.update({
-      where: { id: BigInt(id) },
-      data: validatedData
+    const nuevoDispositivo = await prisma.dispositivo.create({
+      data: {
+        ...validatedData,
+        consumos: undefined // Aseguramos que no se intenten crear consumos desde aquí
+      }
     });
 
     return NextResponse.json({
-      ...dispositivoActualizado,
-      id: dispositivoActualizado.id.toString(),
-      consumoAparatoSug: dispositivoActualizado.consumoAparatoSug.toString(),
-      grupoId: dispositivoActualizado.grupoId?.toString() ?? null
-    });
+      ...nuevoDispositivo,
+      id: nuevoDispositivo.id.toString(),
+      consumoAparatoSug: nuevoDispositivo.consumoAparatoSug.toString(),
+      grupoId: nuevoDispositivo.grupoId?.toString() ?? null
+    }, { status: 201 });
 
   } catch (error) {
-    console.error("Error PUT dispositivo:", error);
+    console.error("Error POST dispositivo:", error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -104,62 +86,18 @@ export async function PUT(
     }
     
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
-        return NextResponse.json(
-          { error: "Dispositivo no encontrado" },
-          { status: 404 }
-        );
-      }
       if (error.code === 'P2002') {
         return NextResponse.json(
-          { error: "Código ESP ya existe" },
+          { error: "El código ESP ya está en uso" },
           { status: 409 }
         );
       }
       if (error.code === 'P2003') {
         return NextResponse.json(
-          { error: "Grupo no existe" },
+          { error: "El grupo especificado no existe" },
           { status: 404 }
         );
       }
-    }
-
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE Eliminar dispositivo
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = z.string().regex(/^\d+$/).parse(params.id);
-
-    await prisma.dispositivo.delete({
-      where: { id: BigInt(id) }
-    });
-
-    return new NextResponse(null, { status: 204 });
-
-  } catch (error) {
-    console.error("Error DELETE dispositivo:", error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "ID inválido" },
-        { status: 400 }
-      );
-    }
-    
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-      return NextResponse.json(
-        { error: "Dispositivo no encontrado" },
-        { status: 404 }
-      );
     }
 
     return NextResponse.json(
