@@ -21,6 +21,7 @@ npm install tsx --save-dev
 npm install tailwindcss @tailwindcss/postcss postcss
 npm install next-themes
 npm install gsap
+npm install react-hot-toast
 
 
 # Para prisma

@@ -236,10 +236,10 @@ async function main() {
       },
       {
         codigo: 'U-1-002',
-        voltaje: 220.0,
+        voltaje: 127.0,
         corriente: 6.1,
-        potencia: 1342.0,
-        energia: 2.9
+        potencia: 500.0,
+        energia: 0.9
       },
       {
         codigo: 'U-1-003',
@@ -257,10 +257,10 @@ async function main() {
       },
       {
         codigo: 'U-1-005',
-        voltaje: 220.0,
+        voltaje: 127.0,
         corriente: 8.0,
-        potencia: 1760.0,
-        energia: 3.7
+        potencia: 520.0,
+        energia: 1.4
       },
       {
         codigo: 'U-1-006',
@@ -271,23 +271,23 @@ async function main() {
       },
       {
         codigo: 'U-1-007',
-        voltaje: 220.0,
+        voltaje: 127.0,
         corriente: 4.3,
-        potencia: 946.0,
-        energia: 2.1
+        potencia: 359.0,
+        energia: 1.1
       },
       {
         codigo: 'U-1-008',
         voltaje: 127.0,
         corriente: 6.2,
-        potencia: 787.4,
-        energia: 2.4
+        potencia: 620.4,
+        energia: 1.4
       },
       {
         codigo: 'U-1-009',
-        voltaje: 220.0,
+        voltaje: 127.0,
         corriente: 5.0,
-        potencia: 1100.0,
+        potencia: 680.0,
         energia: 2.0
       },
       {

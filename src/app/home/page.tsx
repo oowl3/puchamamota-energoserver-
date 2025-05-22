@@ -1,6 +1,5 @@
 import { getUserSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
-import VerificaDatosUsuario from './safe_components/user_data'
 
 export default async function HomePage() {
   const userSession = await getUserSession()
@@ -18,7 +17,6 @@ export default async function HomePage() {
           <h1 className="text-2xl font-bold">Bienvenido, {userData.nombre || userSession.name}</h1>
         </div>
       </div>
-        <VerificaDatosUsuario />
         
     </div>
   )
